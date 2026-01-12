@@ -1,16 +1,22 @@
-install:
-	sh src/lib/install-mlx-zsh.sh
+VENV := .venv
+PY := $(VENV)/bin/python3
 
-source:
-	source .venv/bin/activate
-
-run: source
-	python3 a_maze_ing.py
-	deactivate
+run:
+	@if [ -x "$(PY)" ]; then \
+		"$(PY)" a_maze_ing.py; \
+	else \
+		python3 a_maze_ing.py; \
+	fi
 
 debug:
-	python3 -m pdb a_maze_ing.py
-	deactivate
+	@if [ -x "$(PY)" ]; then \
+		"$(PY)" -m pdb a_maze_ing.py; \
+	else \
+		python3 -m pdb a_maze_ing.py; \
+	fi
+
+install:
+	sh src/lib/install-mlx-zsh.sh
 
 clean:
 	rm -rf .venv
@@ -24,3 +30,5 @@ lint:
 lint-strict:
 	flake8 .
 	mypy . --strict
+
+.PHONY: install run debug clean lint lint-strict
