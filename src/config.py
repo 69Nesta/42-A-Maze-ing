@@ -1,5 +1,4 @@
 from errors import (
-    ConfigError,
     ConfigFormatError,
     ConfigMissingError,
     ConfigValueError
@@ -13,9 +12,11 @@ class ConfigParser:
                 idx = 0
                 for line in f:
                     idx += 1
+                    if (line.strip() == '' or line.strip().startswith('#')):
+                        continue
                     config_line = line.replace('\n', '').split('=')
 
-                    if (len(config_line) == 0):
+                    if (len(config_line) != 2):
                         raise ConfigFormatError(line_number=idx)
 
                     [key, value] = config_line
@@ -87,10 +88,3 @@ class ConfigParser:
             return False
         else:
             raise ConfigValueError(key, value, line_number)
-
-
-if __name__ == '__main__':
-    try:
-        ConfigParser('config.txt')
-    except ConfigError as e:
-        print(f'Error: {e}')

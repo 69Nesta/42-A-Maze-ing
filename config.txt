@@ -1,6 +1,8 @@
-WIDTH=20
+WIDTH=-20
 HEIGHT=15
 ENTRY=0,0
-EXIT=19,12
+
+# Hello Worlds
+EXIT=19,12s
 OUTPUT_FILE=maze.txt
 PERFECT=true
