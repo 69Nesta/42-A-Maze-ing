@@ -1,8 +1,8 @@
-from direction import Direction
-from cell import Cell
+from src.direction import Direction
+from src.cell import Cell
 
 
-class Maze:
+class MazeGenerator:
     def __init__(self, width: int, height: int):
         self.width = width
         self.height = height
@@ -52,6 +52,6 @@ if __name__ == '__main__':
     with open('maze.txt', 'r') as f:
         maze_data = f.read()
 
-    maze = Maze(25, 20)
+    maze = MazeGenerator(25, 20)
     maze.import_maze(maze_data)
     print(maze.export())

@@ -1,4 +1,36 @@
 from mlx import Mlx
+import time
+from src.maze import MazeGenerator
+
+
+class Button:
+    def __init__(self,
+                 x: int, y: int,
+                 w: int, h: int,
+                 label: str,
+                 callback: callable = None):
+        self.x = x
+        self.y = y
+        self.width = w
+        self.height = h
+        self.label = label
+        self.callback = callback
+
+    def collision(self, px: int, py: int) -> bool:
+        return (self.x <= px <= self.x + self.width and
+                self.y <= py <= self.y + self.height)
+
+    def press(self):
+        if self.callback:
+            self.callback()
+
+
+class Text:
+    def __init__(self, x: int, y: int, content: str, color: int):
+        self.x = x
+        self.y = y
+        self.content = content
+        self.color = color
 
 
 class Image:
@@ -13,8 +45,7 @@ class Image:
         self.bits_per_pixel = bpp
         self.size_line = size_line
         self.endian = endian
-
-        print(self.img)
+        self.buttons: list[Button] = []
 
     def destroy(self, mlx: Mlx, mlx_ptr: int):
         mlx.mlx_destroy_image(mlx_ptr, self.img)
@@ -61,52 +92,156 @@ class Image:
             for x in range(self.width):
                 self.put_pixel(x, y, color)
 
+    def create_buttons(
+            self,
+            x: int, y: int,
+            w: int, h: int,
+            labels: str,
+            color: int,
+            callback: callable = None
+            ) -> None:
+        self.buttons.append(Button(x, y, w, h, labels, callback))
+        self.draw_rectangle(x, y, w, h, color)
+
 
 class Renderer:
-    WIDTH: int = 800
-    HEIGHT: int = 600
+    WIDTH: int
+    HEIGHT: int
 
-    def __init__(self):
+    def __init__(self, maze: MazeGenerator):
         self.current_pixel: int = 0
 
         self.mlx: Mlx = Mlx()
         self.mlx_ptr = self.mlx.mlx_init()
+        _, self.WIDTH, self.HEIGHT = self.mlx.mlx_get_screen_size(self.mlx_ptr)
+
+        self.WIDTH = self.WIDTH * 3 // 4
+        self.HEIGHT = self.HEIGHT * 3 // 4
         self.win_ptr = self.mlx.mlx_new_window(
             self.mlx_ptr,
             self.WIDTH,
             self.HEIGHT,
             "Renderer Window"
         )
+        self.maze: MazeGenerator = maze
+        self.start_time: float = 0.0
+        self.last_time: float = 0.0
+        self.frame_count: int = 0
+        self.texts: list[Text] = []
 
         self.image = Image(self.mlx, self.mlx_ptr, self.WIDTH, self.HEIGHT)
-        self.render(None)
 
         self.mlx.mlx_hook(self.win_ptr, 33, 1 << 17, self.close, None)
+        # self.mlx.mlx_hook(self.win_ptr, 10, 1, self.close, None)
+        self.mlx.mlx_key_hook(self.win_ptr, self.key_hook, None)
+        self.mlx.mlx_mouse_hook(self.win_ptr, self.mouse_hook, None)
+        self.start_render()
         self.mlx.mlx_loop(self.mlx_ptr)
-
-    def render(self, _):
-        self.image.clear(0xFFFFFFFF)
-        self.image.put_pixel(
-            self.WIDTH // 2,
-            self.HEIGHT // 2,
-            0xFF0000FF
-        )
-
-        self.mlx.mlx_put_image_to_window(
-            self.mlx_ptr,
-            self.win_ptr,
-            self.image.img,
-            0,
-            0
-        )
-        pass
 
     def close(self, _):
         try:
+            self.image.destroy(self.mlx, self.mlx_ptr)
             self.mlx.mlx_destroy_window(self.mlx_ptr, self.win_ptr)
         finally:
             try:
                 self.mlx.mlx_loop_exit(self.mlx_ptr)
             except Exception:
                 pass
+        return 0
+
+    def start_render(self):
+        self.init_buttons()
+        self.mlx.mlx_loop_hook(self.mlx_ptr, self.render, None)
+
+    def stop_render(self):
+        self.mlx.mlx_loop_hook(self.mlx_ptr, None, None)
+
+    def create_text(self, x: int, y: int, content: str, color: int) -> None:
+        self.texts.append(Text(x, y, content, color))
+        self.mlx.mlx_string_put(
+            self.mlx_ptr,
+            self.win_ptr,
+            x,
+            y,
+            color,
+            content
+        )
+
+    def create_buttons(
+            self,
+            x: int, y: int,
+            w: int, h: int,
+            labels: str,
+            color_text: int,
+            color_bg: int,
+            callback: callable = None
+            ) -> None:
+        self.image.create_buttons(x, y, w, h, labels, color_bg, callback)
+        self.create_text(
+            x + 10,
+            y + 10,
+            labels,
+            color_text,
+        )
+
+    def init_buttons(self):
+        self.create_buttons(10, 40, 80, 30, "Stop", 0xffaaaaaa, 0xff0000ff, (lambda: print(self.maze.export())))
+
+    def render(self, _):
+        maze = self.maze
+        current_time = time.time()
+        elapsed_time = current_time - self.start_time
+        if self.start_time == 0.0:
+            self.start_time = current_time
+            elapsed_time = 0.0
+
+        self.image.draw_rectangle(
+            10,
+            10,
+            90,
+            20,
+            0xff000000
+        )
+
+        self.mlx.mlx_put_image_to_window(
+            self.mlx_ptr,
+            self.win_ptr,
+            self.image.img,
+            0, 0
+        )
+
+        for text in self.texts:
+            self.mlx.mlx_string_put(
+                self.mlx_ptr,
+                self.win_ptr,
+                text.x,
+                text.y,
+                text.color,
+                text.content
+            )
+
+        self.mlx.mlx_string_put(
+            self.mlx_ptr,
+            self.win_ptr,
+            10,
+            10,
+            0xffffffff,
+            f'FPS: {self.frame_count / elapsed_time if elapsed_time else 0:.0f}'
+        )
+        self.last_time = current_time
+        self.frame_count += 1
+
+    def mouse_hook(self, btn, x, y, _):
+        print("Window clicked.")
+        for button in self.image.buttons:
+            if (button.collision(x, y)):
+                print(f"Button '{button.label}' clicked.")
+                button.press()
+        return 0
+
+    def key_hook(self, keycode, _):
+        match keycode:
+            case 65307:  # ESC key
+                print("Escape key pressed. Exiting...")
+                self.close(None)
         return 0

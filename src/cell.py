@@ -1,4 +1,4 @@
-from direction import Direction
+from src.direction import Direction
 
 
 class Cell:
