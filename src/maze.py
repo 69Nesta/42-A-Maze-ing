@@ -46,23 +46,27 @@ class MazeGenerator:
 
         self.path = path_directions
 
-    def pathfinding_next_step(self, x: int, y: int) -> tuple[int, int]:
+    def pathfinding_next_step(
+                self,
+                x: int, y: int
+            ) -> tuple[int, int, Direction]:
         if not self.path:
-            return (x, y)
+            return (x, y, None)
 
-        direction = self.path[0]
+        direction = self.path[0].capitalize()
         self.path = self.path[1:]
 
-        if direction == 'N':
-            return (x, y - 1)
-        elif direction == 'E':
-            return (x + 1, y)
-        elif direction == 'S':
-            return (x, y + 1)
-        elif direction == 'W':
-            return (x - 1, y)
-        else:
-            return (x, y)
+        match direction:
+            case 'N':
+                return (x, y - 1, Direction.NORTH)
+            case 'E':
+                return (x + 1, y, Direction.EAST)
+            case 'S':
+                return (x, y + 1, Direction.SOUTH)
+            case 'W':
+                return (x - 1, y, Direction.WEST)
+            case _:
+                return (x, y, None)
 
 
 if __name__ == '__main__':

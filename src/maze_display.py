@@ -42,7 +42,7 @@ class MazeDisplay:
     WIDTH: int
     HEIGHT: int
 
-    MAZE_PADDING: int = 20
+    MAZE_PADDING: int = 0
     WIDTH_MAZE: int
     WIDTH_PANEL: int
 
@@ -71,7 +71,7 @@ class MazeDisplay:
             Settings.SHOW_FPS: True,
             Settings.SHOW_COORDINATES: False,
             Settings.SHOW_CELL_WALLS: True,
-            Settings.SHOW_PATHFINDING: False,
+            Settings.SHOW_PATHFINDING: True,
         })
 
         self.panel = Image(
@@ -79,10 +79,29 @@ class MazeDisplay:
                 self.WIDTH_PANEL,
                 self.HEIGHT
             )
-        self.maze_image = Image(
-                self.mlx, self.mlx_ptr,
+
+        total_width = self.WIDTH_MAZE - self.MAZE_PADDING
+        total_height = self.HEIGHT - self.MAZE_PADDING
+
+        cell_width = total_width // (self.maze.width * 2 + 1)
+        cell_height = total_height // (self.maze.height * 2 + 1)
+
+        self.cell_size = min(cell_width, cell_height)
+
+        self.total_width = self.cell_size * (self.maze.width * 2 + 1)
+        self.total_height = self.cell_size * (self.maze.height * 2 + 1)
+
+        if cell_width == 0 or cell_height == 0:
+            raise DisplayMazeToBig(
+                self.maze.width, self.maze.height,
                 self.WIDTH_MAZE - self.MAZE_PADDING,
                 self.HEIGHT - self.MAZE_PADDING
+            )
+        else:
+            self.maze_image = Image(
+                self.mlx, self.mlx_ptr,
+                self.total_width,
+                self.total_height
             )
 
         if (self.maze_image.width < self.maze.width * 2 + 1 or
@@ -118,7 +137,16 @@ class MazeDisplay:
             self.mlx_ptr,
             self.win_ptr,
             self.maze_image.img,
-            self.MAZE_PADDING // 2, self.MAZE_PADDING // 2
+            self.WIDTH_MAZE // 2 - self.total_width // 2,
+            self.HEIGHT // 2 - self.total_height // 2
+        )
+        self.render_panel()
+        self.mlx.mlx_put_image_to_window(
+            self.mlx_ptr,
+            self.win_ptr,
+            self.panel.img,
+            self.WIDTH_MAZE,
+            0
         )
 
         # replace with looped render call
@@ -143,36 +171,38 @@ class MazeDisplay:
         return 0
 
     def render_panel(self):
-        # image = self.panel
+        image = self.panel
+
+        image.draw_rectangle(
+            0, 0,
+            image.width,
+            image.height,
+            0xFFCCCCCC
+        )
+
         pass
 
     def render_maze(self):
-        image = self.maze_image
-        maze = self.maze
+        # image = self.maze_image
+        # maze = self.maze
 
-        cell_width = image.width // (maze.width * 2 + 1)
-        cell_height = image.height // (maze.height * 2 + 1)
-
-        cell = min(cell_width, cell_height)
-        cell_width = cell
-        cell_height = cell
         # cell_width = image.width // maze.width
         # cell_height = image.height // maze.height
-        self.draw_maze(cell_width, cell_height)
+        self.draw_maze()
         if self.settings.get(Settings.SHOW_PATHFINDING):
-            self.draw_pathfinding(cell_width, cell_height)
+            self.draw_pathfinding()
         pass
 
-    def draw_maze(self, cell_width: int, cell_height: int):
+    def draw_maze(self):
         image = self.maze_image
         maze = self.maze
 
-        image.put_pixel(0, 0, 0xFFFFFFFF)
-        image.put_pixel(image.width - 1, image.height - 1, 0xFFFF0000)
+        cell_size = self.cell_size
+
         image.draw_rectangle(
             0, 0,
-            cell_width * maze.width * 2 + cell_width,
-            cell_height * maze.height * 2 + cell_height,
+            cell_size * maze.width * 2 + cell_size,
+            cell_size * maze.height * 2 + cell_size,
             MazeDisplayColors.BACKGROUND.value
         )
         for y in range(maze.height):
@@ -182,75 +212,81 @@ class MazeDisplay:
                     cell,
                     x,
                     y,
-                    cell_width,
-                    cell_height,
                     MazeDisplayColors.WALL.value
                 )
                 if cell.is_full():
                     self.draw_cell_fill(
                         x, y,
-                        cell_width, cell_height,
                         MazeDisplayColors.LOGO.value
                     )
-                # else:
 
-        # for y in range(maze.height):
-        #     for x in range(maze.width):
-        #         cell = maze.get_cell(x, y)
-        #         x0, y0, x1, y1 = self.get_cell_pos(
-        #             x, y, cell_width, cell_height)
-
-        #         if cell.has_wall(Direction.NORTH):
-        #             image.draw_line(x0, y0, x1, y0, 0xFF0000FF)
-        #         if cell.has_wall(Direction.EAST):
-        #             image.draw_line(x1, y0, x1, y1, 0xFFFF00FF)
-        #         if cell.has_wall(Direction.SOUTH):
-        #             image.draw_line(x0, y1, x1, y1, 0xFF00FFFF)
-        #         if cell.has_wall(Direction.WEST):
-        #             image.draw_line(x0, y0, x0, y1, 0xFFFF0000)
-        #         if cell.is_full():
-        #             self.fill_cell(x, y, 0xFFFFFFFF)
-
-        # self.fill_cell(maze.start[0], maze.start[1], 0xFF00FF00)
-        # self.fill_cell(maze.end[0], maze.end[1], 0xFFFF0000)
-        self.draw_cell_fill(maze.start[0], maze.start[1],
-                            cell_width, cell_height,
-                            MazeDisplayColors.START.value)
-        self.draw_cell_fill(maze.end[0], maze.end[1],
-                            cell_width, cell_height,
-                            MazeDisplayColors.END.value)
+        self.draw_start_end()
         pass
 
-    def draw_pathfinding(self, cell_width: int, cell_height: int):
-        # image = self.maze_image
+    def draw_pathfinding(self):
+        image = self.maze_image
         maze = self.maze
 
+        continue_pathfinding = True
         x, y = maze.start
-        while (x, y) != maze.end:
-            # self.fill_cell(x, y, 0xFFFFFF00)
-            self.draw_cell_fill(
-                x, y,
-                cell_width, cell_height,
-                MazeDisplayColors.PATH.value
-            )
-            x, y = maze.pathfinding_next_step(x, y)
+        while continue_pathfinding:
+            current_x, current_y = x, y
+            x, y, direction = maze.pathfinding_next_step(x, y)
+            x0, y0, x1, y1, _, _ = self.get_cell_pos(current_x, current_y)
+
+            match direction:
+                case Direction.NORTH:
+                    image.draw_rectangle(
+                        x1, y0,
+                        self.cell_size, self.cell_size * 2,
+                        MazeDisplayColors.PATH.value
+                    )
+                case Direction.EAST:
+                    image.draw_rectangle(
+                        x1, y1,
+                        self.cell_size * 2, self.cell_size,
+                        MazeDisplayColors.PATH.value
+                    )
+                case Direction.SOUTH:
+                    image.draw_rectangle(
+                        x1, y1,
+                        self.cell_size, self.cell_size * 2,
+                        MazeDisplayColors.PATH.value
+                    )
+                case Direction.WEST:
+                    image.draw_rectangle(
+                        x0, y1,
+                        self.cell_size * 2, self.cell_size,
+                        MazeDisplayColors.PATH.value
+                    )
+                case _:
+                    break
+        self.draw_start_end()
         pass
 
-    @staticmethod
+    def draw_start_end(self):
+        maze = self.maze
+
+        self.draw_cell_fill(maze.start[0], maze.start[1],
+                            MazeDisplayColors.START.value)
+        self.draw_cell_fill(maze.end[0], maze.end[1],
+                            MazeDisplayColors.END.value)
+
     def get_cell_pos(
+        self,
         x: int,
         y: int,
-        cell_width: int,
-        cell_height: int
     ) -> tuple[int, int, int, int, int, int]:
-        x0 = x * cell_width * 2
-        y0 = y * cell_height * 2
+        cell_size = self.cell_size
 
-        x1 = x0 + cell_width
-        y1 = y0 + cell_height
+        x0 = x * cell_size * 2
+        y0 = y * cell_size * 2
 
-        x2 = x1 + cell_width
-        y2 = y1 + cell_height
+        x1 = x0 + cell_size
+        y1 = y0 + cell_size
+
+        x2 = x1 + cell_size
+        y2 = y1 + cell_size
         return (x0, y0, x1, y1, x2, y2)
 
     def draw_cell_border(
@@ -258,39 +294,36 @@ class MazeDisplay:
         cell: Cell,
         x: int,
         y: int,
-        cell_width: int,
-        cell_height: int,
         color: int
-    ):
+    ) -> None:
         image = self.maze_image
-        x0, y0, _, _, x2, y2 = self.get_cell_pos(
-            x, y, cell_width, cell_height)
+        cell_size = self.cell_size
+        x0, y0, _, _, x2, y2 = self.get_cell_pos(x, y)
 
         if cell.has_wall(Direction.NORTH):
-            image.draw_rectangle(x0, y0, cell_width * 3, cell_height, color)
+            image.draw_rectangle(x0, y0, cell_size * 3, cell_size, color)
         if cell.has_wall(Direction.EAST):
-            image.draw_rectangle(x2, y0, cell_width, cell_height * 3, color)
+            image.draw_rectangle(x2, y0, cell_size, cell_size * 3, color)
         if cell.has_wall(Direction.SOUTH):
-            image.draw_rectangle(x0, y2, cell_width * 3, cell_height, color)
+            image.draw_rectangle(x0, y2, cell_size * 3, cell_size, color)
         if cell.has_wall(Direction.WEST):
-            image.draw_rectangle(x0, y0, cell_width, cell_height * 3, color)
+            image.draw_rectangle(x0, y0, cell_size, cell_size * 3, color)
 
     def draw_cell_fill(
         self,
         x: int,
         y: int,
-        cell_width: int,
-        cell_height: int,
         color: int
     ) -> None:
         image = self.maze_image
+        cell_size = self.cell_size
+        _, _, x1, y1, _, _ = self.get_cell_pos(x, y)
 
-        _, _, x1, y1, _, _ = self.get_cell_pos(
-            x, y, cell_width, cell_height)
         print(f"Filling cell at ({x}, {y}) -> pixel ({x1}, {y1})")
+
         image.draw_rectangle(
             x1, y1,
-            cell_width, cell_height,
+            cell_size, cell_size,
             color
         )
 
