@@ -36,15 +36,33 @@ class MazeGenerator:
                     bits = f"{int(char):04b}"
                 else:
                     bits = f"{int(char, 16):04b}"
-                cell.walls[Direction.NORTH] = bits[0] == '1'
-                cell.walls[Direction.EAST] = bits[1] == '1'
-                cell.walls[Direction.SOUTH] = bits[2] == '1'
-                cell.walls[Direction.WEST] = bits[3] == '1'
+                cell.walls[Direction.NORTH] = bits[3] == '1'
+                cell.walls[Direction.EAST] = bits[2] == '1'
+                cell.walls[Direction.SOUTH] = bits[1] == '1'
+                cell.walls[Direction.WEST] = bits[0] == '1'
 
         self.start = start_coords
         self.end = end_coords
 
         self.path = path_directions
+
+    def pathfinding_next_step(self, x: int, y: int) -> tuple[int, int]:
+        if not self.path:
+            return (x, y)
+
+        direction = self.path[0]
+        self.path = self.path[1:]
+
+        if direction == 'N':
+            return (x, y - 1)
+        elif direction == 'E':
+            return (x + 1, y)
+        elif direction == 'S':
+            return (x, y + 1)
+        elif direction == 'W':
+            return (x - 1, y)
+        else:
+            return (x, y)
 
 
 if __name__ == '__main__':

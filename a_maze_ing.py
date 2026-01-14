@@ -1,3 +1,4 @@
+import sys
 from src.maze_display import MazeDisplay
 from src.config import ConfigParser
 from src.errors import ConfigError
@@ -16,7 +17,8 @@ class AMazeIng:
 
 
 if __name__ == '__main__':
+    args = sys.argv[1:]
     try:
-        app = AMazeIng('config.txt')
+        app = AMazeIng(args[0] if args else 'config.txt')
     except ConfigError as e:
         print(f'Error: {e}')

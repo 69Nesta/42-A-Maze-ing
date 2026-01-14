@@ -18,12 +18,18 @@ class Cell:
     def has_wall(self, direction: Direction) -> bool:
         return self.walls[direction]
 
+    def is_full(self):
+        return self.walls[Direction.NORTH] and \
+               self.walls[Direction.EAST] and \
+               self.walls[Direction.SOUTH] and \
+               self.walls[Direction.WEST]
+
     def export(self) -> str:
         bits = [
-            int(self.walls[Direction.NORTH]),
-            int(self.walls[Direction.EAST]),
-            int(self.walls[Direction.SOUTH]),
             int(self.walls[Direction.WEST]),
+            int(self.walls[Direction.SOUTH]),
+            int(self.walls[Direction.EAST]),
+            int(self.walls[Direction.NORTH]),
         ]
         bit_str = ''.join(str(b) for b in bits)
         hex_value = hex(int(bit_str, 2))[2:].upper()
@@ -34,7 +40,7 @@ class Cell:
             bits = f"{int(data):04b}"
         else:
             bits = f"{int(data, 16):04b}"
-        self.walls[Direction.NORTH] = bits[0] == '1'
-        self.walls[Direction.EAST] = bits[1] == '1'
-        self.walls[Direction.SOUTH] = bits[2] == '1'
-        self.walls[Direction.WEST] = bits[3] == '1'
+        self.walls[Direction.NORTH] = bits[3] == '1'
+        self.walls[Direction.EAST] = bits[2] == '1'
+        self.walls[Direction.SOUTH] = bits[1] == '1'
+        self.walls[Direction.WEST] = bits[0] == '1'
