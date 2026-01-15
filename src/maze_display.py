@@ -206,15 +206,9 @@ class MazeDisplay:
 
     def render_maze(self):
         print("Rendering maze...")
-        # image = self.maze_image
-        # maze = self.maze
-
-        # cell_width = image.width // maze.width
-        # cell_height = image.height // maze.height
         self.draw_maze()
         if self.settings.get(Settings.SHOW_PATHFINDING):
             self.draw_pathfinding()
-        pass
 
     def draw_maze(self):
         image: Image = self.maze_image
@@ -240,21 +234,20 @@ class MazeDisplay:
                 if cell.is_full():
                     self.draw_cell_fill(
                         x, y,
-                        self.color_schemes.get(MazeColors.PATH)
+                        self.color_schemes.get(MazeColors.LOGO)
                     )
 
         self.draw_start_end()
-        pass
 
     def draw_pathfinding(self):
+        print("Drawing pathfinding...")
         image: Image = self.maze_image
         maze: MazeGenerator = self.maze
 
-        continue_pathfinding = True
         x, y = maze.start
-        while continue_pathfinding:
+        for step in maze.pathfinding_next_step():
             current_x, current_y = x, y
-            x, y, direction = maze.pathfinding_next_step(x, y)
+            x, y, direction = step
             x0, y0, x1, y1, _, _ = self.get_cell_pos(current_x, current_y)
 
             color = self.color_schemes.get(MazeColors.PATH)
@@ -291,10 +284,10 @@ class MazeDisplay:
     def draw_start_end(self):
         maze: MazeGenerator = self.maze
 
-        self.draw_cell_fill(maze.start[0], maze.start[1],
-                            self.color_schemes.get(MazeColors.START))
-        self.draw_cell_fill(maze.end[0], maze.end[1],
-                            self.color_schemes.get(MazeColors.END))
+        sx, sy = maze.start
+        ex, ey = maze.end
+        self.draw_cell_fill(sx, sy, self.color_schemes.get(MazeColors.START))
+        self.draw_cell_fill(ex, ey, self.color_schemes.get(MazeColors.END))
 
     def change_color_scheme(self):
         self.color_schemes.next_scheme()

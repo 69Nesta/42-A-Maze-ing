@@ -1,3 +1,4 @@
+from typing import Generator
 from src.direction import Direction
 from src.cell import Cell
 
@@ -47,26 +48,28 @@ class MazeGenerator:
         self.path = path_directions
 
     def pathfinding_next_step(
-                self,
-                x: int, y: int
-            ) -> tuple[int, int, Direction]:
-        if not self.path:
-            return (x, y, None)
-
-        direction = self.path[0].capitalize()
-        self.path = self.path[1:]
-
-        match direction:
-            case 'N':
-                return (x, y - 1, Direction.NORTH)
-            case 'E':
-                return (x + 1, y, Direction.EAST)
-            case 'S':
-                return (x, y + 1, Direction.SOUTH)
-            case 'W':
-                return (x - 1, y, Direction.WEST)
-            case _:
-                return (x, y, None)
+                self
+                ) -> Generator[tuple[int, int, Direction], None, None]:
+        if not self.start or not self.end or not self.path:
+            return (0, 0, None)
+        x, y = self.start
+        for direction_char in self.path:
+            direction = direction_char.capitalize()
+            match direction:
+                case 'N':
+                    y -= 1
+                    yield (x, y, Direction.NORTH)
+                case 'E':
+                    x += 1
+                    yield (x, y, Direction.EAST)
+                case 'S':
+                    y += 1
+                    yield (x, y, Direction.SOUTH)
+                case 'W':
+                    x -= 1
+                    yield (x, y, Direction.WEST)
+                case _:
+                    yield (x, y, None)
 
 
 if __name__ == '__main__':
