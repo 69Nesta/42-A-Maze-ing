@@ -25,9 +25,22 @@ class Image:
             color.to_bytes(bpp, 'little')
 
     def draw_rectangle(self, x: int, y: int, w: int, h: int, color: int):
-        for j in range(y, y + h):
-            for i in range(x, x + w):
-                self.put_pixel(i, j, color)
+        bpp = self.bits_per_pixel // 8
+        color_bytes = color.to_bytes(bpp, 'little')
+
+        line_size = self.size_line
+        rect_row = color_bytes * w
+
+        base_offset = y * line_size + x * bpp
+
+        for j in range(h):
+            offset = base_offset + j * line_size
+            self.addr[offset:offset + w * bpp] = rect_row
+
+    # def draw_rectangle(self, x: int, y: int, w: int, h: int, color: int):
+    #     for j in range(y, y + h):
+    #         for i in range(x, x + w):
+    #             self.put_pixel(i, j, color)
 
     def draw_line(self, x0: int, y0: int, x1: int, y1: int, color: int):
         dx = abs(x1 - x0)

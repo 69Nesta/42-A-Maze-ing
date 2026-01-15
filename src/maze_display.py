@@ -1,10 +1,12 @@
 from mlx import Mlx
 from enum import Enum
 from src.image import Image
+from src.buttons import Button, ButtonManager
 from src.maze import MazeGenerator
 from src.direction import Direction
 from src.errors import (DisplayMazeToBig)
 from src.cell import Cell
+from src.text_manager import TextManager
 
 
 class Settings(Enum):
@@ -67,29 +69,41 @@ class MazeDisplay:
         self.start_time: float = 0.0
         self.last_time: float = 0.0
         self.frame_count: int = 0
-        self.settings = MazeDisplaySettings({
+        self.settings: MazeDisplaySettings = MazeDisplaySettings({
             Settings.SHOW_FPS: True,
             Settings.SHOW_COORDINATES: False,
             Settings.SHOW_CELL_WALLS: True,
             Settings.SHOW_PATHFINDING: True,
         })
 
-        self.panel = Image(
+        self.panel: Image = Image(
                 self.mlx, self.mlx_ptr,
                 self.WIDTH_PANEL,
                 self.HEIGHT
             )
 
-        total_width = self.WIDTH_MAZE - self.MAZE_PADDING
-        total_height = self.HEIGHT - self.MAZE_PADDING
+        self.texts: TextManager = TextManager(
+            self.mlx,
+            self.mlx_ptr,
+            self.win_ptr
+        )
 
-        cell_width = total_width // (self.maze.width * 2 + 1)
-        cell_height = total_height // (self.maze.height * 2 + 1)
+        self.buttons: ButtonManager = ButtonManager(
+            self.panel,
+            self.WIDTH - self.WIDTH_PANEL,
+            self.texts
+        )
 
-        self.cell_size = min(cell_width, cell_height)
+        total_width: int = self.WIDTH_MAZE - self.MAZE_PADDING
+        total_height: int = self.HEIGHT - self.MAZE_PADDING
 
-        self.total_width = self.cell_size * (self.maze.width * 2 + 1)
-        self.total_height = self.cell_size * (self.maze.height * 2 + 1)
+        cell_width: int = total_width // (self.maze.width * 2 + 1)
+        cell_height: int = total_height // (self.maze.height * 2 + 1)
+
+        self.cell_size: int = min(cell_width, cell_height)
+
+        self.total_width: int = self.cell_size * (self.maze.width * 2 + 1)
+        self.total_height: int = self.cell_size * (self.maze.height * 2 + 1)
 
         if cell_width == 0 or cell_height == 0:
             raise DisplayMazeToBig(
@@ -98,7 +112,7 @@ class MazeDisplay:
                 self.HEIGHT - self.MAZE_PADDING
             )
         else:
-            self.maze_image = Image(
+            self.maze_image: Image = Image(
                 self.mlx, self.mlx_ptr,
                 self.total_width,
                 self.total_height
@@ -131,15 +145,12 @@ class MazeDisplay:
         return 0
 
     def start_render(self):
-        # temporary single render call
-        self.render_maze()
-        self.mlx.mlx_put_image_to_window(
-            self.mlx_ptr,
-            self.win_ptr,
-            self.maze_image.img,
-            self.WIDTH_MAZE // 2 - self.total_width // 2,
-            self.HEIGHT // 2 - self.total_height // 2
-        )
+        self.render(None)
+
+        # replace with looped render call
+        # self.mlx.mlx_loop_hook(self.mlx_ptr, self.render, None)
+
+    def render(self, _):
         self.render_panel()
         self.mlx.mlx_put_image_to_window(
             self.mlx_ptr,
@@ -148,30 +159,20 @@ class MazeDisplay:
             self.WIDTH_MAZE,
             0
         )
+        self.texts.put_texts()
 
-        # replace with looped render call
-        # self.mlx.mlx_loop_hook(self.mlx_ptr, self.render, None)
-
-    def render(self, _):
-        self.render_panel()
         self.render_maze()
-
-        self.mlx.mlx_put_image_to_window(
-            self.mlx_ptr,
-            self.win_ptr,
-            self.panel.img,
-            self.WIDTH_MAZE, 0
-        )
         self.mlx.mlx_put_image_to_window(
             self.mlx_ptr,
             self.win_ptr,
             self.maze_image.img,
-            self.MAZE_PADDING // 2, self.MAZE_PADDING // 2
+            self.WIDTH_MAZE // 2 - self.total_width // 2,
+            self.HEIGHT // 2 - self.total_height // 2
         )
         return 0
 
     def render_panel(self):
-        image = self.panel
+        image: Image = self.panel
 
         image.draw_rectangle(
             0, 0,
@@ -180,6 +181,16 @@ class MazeDisplay:
             0xFFCCCCCC
         )
 
+        self.buttons.add_button(
+            Button(
+                "Regenerate Maze",
+                10, 10,
+                200, 60,
+                0xFFABDAFC,
+                0xFFE5FCFF,
+                lambda: print("Regenerate Maze button pressed.")
+            )
+        )
         pass
 
     def render_maze(self):
@@ -194,8 +205,8 @@ class MazeDisplay:
         pass
 
     def draw_maze(self):
-        image = self.maze_image
-        maze = self.maze
+        image: Image = self.maze_image
+        maze: MazeGenerator = self.maze
 
         cell_size = self.cell_size
 
@@ -224,8 +235,8 @@ class MazeDisplay:
         pass
 
     def draw_pathfinding(self):
-        image = self.maze_image
-        maze = self.maze
+        image: Image = self.maze_image
+        maze: MazeGenerator = self.maze
 
         continue_pathfinding = True
         x, y = maze.start
@@ -265,7 +276,7 @@ class MazeDisplay:
         pass
 
     def draw_start_end(self):
-        maze = self.maze
+        maze: MazeGenerator = self.maze
 
         self.draw_cell_fill(maze.start[0], maze.start[1],
                             MazeDisplayColors.START.value)
@@ -277,16 +288,16 @@ class MazeDisplay:
         x: int,
         y: int,
     ) -> tuple[int, int, int, int, int, int]:
-        cell_size = self.cell_size
+        cell_size: int = self.cell_size
 
-        x0 = x * cell_size * 2
-        y0 = y * cell_size * 2
+        x0: int = x * cell_size * 2
+        y0: int = y * cell_size * 2
 
-        x1 = x0 + cell_size
-        y1 = y0 + cell_size
+        x1: int = x0 + cell_size
+        y1: int = y0 + cell_size
 
-        x2 = x1 + cell_size
-        y2 = y1 + cell_size
+        x2: int = x1 + cell_size
+        y2: int = y1 + cell_size
         return (x0, y0, x1, y1, x2, y2)
 
     def draw_cell_border(
@@ -296,8 +307,8 @@ class MazeDisplay:
         y: int,
         color: int
     ) -> None:
-        image = self.maze_image
-        cell_size = self.cell_size
+        image: Image = self.maze_image
+        cell_size: int = self.cell_size
         x0, y0, _, _, x2, y2 = self.get_cell_pos(x, y)
 
         if cell.has_wall(Direction.NORTH):
@@ -315,8 +326,8 @@ class MazeDisplay:
         y: int,
         color: int
     ) -> None:
-        image = self.maze_image
-        cell_size = self.cell_size
+        image: Image = self.maze_image
+        cell_size: int = self.cell_size
         _, _, x1, y1, _, _ = self.get_cell_pos(x, y)
 
         print(f"Filling cell at ({x}, {y}) -> pixel ({x1}, {y1})")
@@ -327,15 +338,12 @@ class MazeDisplay:
             color
         )
 
-    def mouse_hook(self, btn, x, y, _):
+    def mouse_hook(self, btn: int, x: int, y: int, _):
         print("Window clicked.")
-        # for button in self.buttons:
-        #     if (button.collision(x, y)):
-        #         print(f"Button '{button.label}' clicked.")
-        #         button.press()
+        self.buttons.on_click(x - self.WIDTH_MAZE, y)
         return 0
 
-    def key_hook(self, keycode, _):
+    def key_hook(self, keycode: int, _):
         match keycode:
             case 65307:  # ESC key
                 print("Escape key pressed. Exiting...")

@@ -12,6 +12,18 @@ class Cell:
             Direction.WEST: True,
         }
 
+    @classmethod
+    def create(cls,
+               x: int, y: int,
+               north: bool, east: bool, south: bool, west: bool
+               ) -> 'Cell':
+        cell = cls(x, y)
+        cell.walls[Direction.NORTH] = north
+        cell.walls[Direction.EAST] = east
+        cell.walls[Direction.SOUTH] = south
+        cell.walls[Direction.WEST] = west
+        return cell
+
     def remove_wall(self, direction: Direction):
         self.walls[direction] = False
 
