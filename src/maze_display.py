@@ -71,7 +71,7 @@ class MazeDisplay:
             Settings.SHOW_FPS: True,
             Settings.SHOW_COORDINATES: False,
             Settings.SHOW_CELL_WALLS: True,
-            Settings.SHOW_PATHFINDING: False,
+            Settings.SHOW_PATHFINDING: True,
         })
 
         self.panel = Image(

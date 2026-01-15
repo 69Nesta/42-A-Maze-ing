@@ -14,6 +14,7 @@ class AMazeIng:
             maze_data = f.read()
         # self.maze.import_maze(maze_data)
         self.maze.generate(maze_data)
+
         self.renderer = MazeDisplay(self.maze)
 
 
