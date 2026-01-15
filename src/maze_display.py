@@ -30,6 +30,10 @@ class MazeDisplaySettings:
         if key in self.settings:
             return self.settings[key]
         return None
+    
+    def toggle(self, key: str):
+        if key in self.settings and isinstance(self.settings[key], bool):
+            self.settings[key] = not self.settings[key]
 
 
 class MazeDisplay:
@@ -168,6 +172,8 @@ class MazeDisplay:
                 self.WIDTH_MAZE // 2 - self.total_width // 2,
                 self.HEIGHT // 2 - self.total_height // 2
             )
+        if (self.first_render):
+            self.first_render = False
         return 0
 
     def render_panel(self):
@@ -200,6 +206,17 @@ class MazeDisplay:
                 0xFFABDAFC,
                 0xFFE5FCFF,
                 lambda: self.change_color_scheme()
+            )
+        )
+
+        self.buttons.add_button(
+            Button(
+                "Toggle Pathfinding",
+                10, 150,
+                200, 60,
+                0xFFABDAFC,
+                0xFFE5FCFF,
+                lambda: self.toggle_setting(Settings.SHOW_PATHFINDING)
             )
         )
         pass
@@ -244,13 +261,20 @@ class MazeDisplay:
         image: Image = self.maze_image
         maze: MazeGenerator = self.maze
 
+        color: int
+
+        if (self.settings.get(Settings.SHOW_PATHFINDING)):
+            color = self.color_schemes.get(MazeColors.PATH)
+        elif (not self.first_render):
+            color = self.color_schemes.get(MazeColors.BACKGROUND)
+        else:
+            return
         x, y = maze.start
         for step in maze.pathfinding_next_step():
             current_x, current_y = x, y
             x, y, direction = step
             x0, y0, x1, y1, _, _ = self.get_cell_pos(current_x, current_y)
 
-            color = self.color_schemes.get(MazeColors.PATH)
             match direction:
                 case Direction.NORTH:
                     image.draw_rectangle(
@@ -291,6 +315,10 @@ class MazeDisplay:
 
     def change_color_scheme(self):
         self.color_schemes.next_scheme()
+        self.maze_image.need_update = True
+
+    def toggle_setting(self, setting: Settings):
+        self.settings.toggle(setting)
         self.maze_image.need_update = True
 
     def get_cell_pos(
