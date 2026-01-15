@@ -51,7 +51,7 @@ class ButtonManager:
         x0 = button.x
         y0 = button.y - 5
         w = len(button.label) * 10
-        h = y0 + 11
+        h = 11
 
         image.draw_rectangle(
             button.x, button.y,

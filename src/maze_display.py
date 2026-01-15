@@ -7,6 +7,7 @@ from src.direction import Direction
 from src.errors import (DisplayMazeToBig)
 from src.cell import Cell
 from src.text_manager import TextManager
+from src.schemes_colors import (MazeColors, MazeSchemesColors)
 
 
 class Settings(Enum):
@@ -29,15 +30,6 @@ class MazeDisplaySettings:
         if key in self.settings:
             return self.settings[key]
         return None
-
-
-class MazeDisplayColors(Enum):
-    BACKGROUND: int = 0xFFD9DBF1
-    WALL: int = 0xFF7D84B2
-    PATH: int = 0xFFF5B027
-    START: int = 0xFFDBF4A7
-    END: int = 0xFF8E9DCC
-    LOGO: int = 0xFFF9F9ED
 
 
 class MazeDisplay:
@@ -93,6 +85,8 @@ class MazeDisplay:
             self.WIDTH - self.WIDTH_PANEL,
             self.texts
         )
+
+        self.color_schemes: MazeSchemesColors = MazeSchemesColors()
 
         total_width: int = self.WIDTH_MAZE - self.MAZE_PADDING
         total_height: int = self.HEIGHT - self.MAZE_PADDING
@@ -191,6 +185,17 @@ class MazeDisplay:
                 lambda: print("Regenerate Maze button pressed.")
             )
         )
+
+        self.buttons.add_button(
+            Button(
+                "Change Color Scheme",
+                10, 80,
+                200, 60,
+                0xFFABDAFC,
+                0xFFE5FCFF,
+                lambda: (self.color_schemes.next_scheme(), self.render(None))
+            )
+        )
         pass
 
     def render_maze(self):
@@ -214,7 +219,7 @@ class MazeDisplay:
             0, 0,
             cell_size * maze.width * 2 + cell_size,
             cell_size * maze.height * 2 + cell_size,
-            MazeDisplayColors.BACKGROUND.value
+            self.color_schemes.get(MazeColors.BACKGROUND)
         )
         for y in range(maze.height):
             for x in range(maze.width):
@@ -223,12 +228,12 @@ class MazeDisplay:
                     cell,
                     x,
                     y,
-                    MazeDisplayColors.WALL.value
+                    self.color_schemes.get(MazeColors.WALL)
                 )
                 if cell.is_full():
                     self.draw_cell_fill(
                         x, y,
-                        MazeDisplayColors.LOGO.value
+                        self.color_schemes.get(MazeColors.PATH)
                     )
 
         self.draw_start_end()
@@ -245,30 +250,31 @@ class MazeDisplay:
             x, y, direction = maze.pathfinding_next_step(x, y)
             x0, y0, x1, y1, _, _ = self.get_cell_pos(current_x, current_y)
 
+            color = self.color_schemes.get(MazeColors.PATH)
             match direction:
                 case Direction.NORTH:
                     image.draw_rectangle(
                         x1, y0,
                         self.cell_size, self.cell_size * 2,
-                        MazeDisplayColors.PATH.value
+                        color
                     )
                 case Direction.EAST:
                     image.draw_rectangle(
                         x1, y1,
                         self.cell_size * 2, self.cell_size,
-                        MazeDisplayColors.PATH.value
+                        color
                     )
                 case Direction.SOUTH:
                     image.draw_rectangle(
                         x1, y1,
                         self.cell_size, self.cell_size * 2,
-                        MazeDisplayColors.PATH.value
+                        color
                     )
                 case Direction.WEST:
                     image.draw_rectangle(
                         x0, y1,
                         self.cell_size * 2, self.cell_size,
-                        MazeDisplayColors.PATH.value
+                        color
                     )
                 case _:
                     break
@@ -279,9 +285,9 @@ class MazeDisplay:
         maze: MazeGenerator = self.maze
 
         self.draw_cell_fill(maze.start[0], maze.start[1],
-                            MazeDisplayColors.START.value)
+                            self.color_schemes.get(MazeColors.START))
         self.draw_cell_fill(maze.end[0], maze.end[1],
-                            MazeDisplayColors.END.value)
+                            self.color_schemes.get(MazeColors.END))
 
     def get_cell_pos(
         self,
