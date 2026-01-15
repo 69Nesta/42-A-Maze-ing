@@ -13,6 +13,7 @@ class Image:
         self.bits_per_pixel = bpp
         self.size_line = size_line
         self.endian = endian
+        self.need_update = True
 
     def destroy(self, mlx: Mlx, mlx_ptr: int):
         mlx.mlx_destroy_image(mlx_ptr, self.img)

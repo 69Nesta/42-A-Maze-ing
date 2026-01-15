@@ -20,7 +20,7 @@ class Settings(Enum):
 class MazeDisplaySettings:
     def __init__(self, defaults: dict = {}):
         self.settings = defaults
-        self.update = True
+        # self.need_update = True
         pass
 
     def set(self, key: str, value):
@@ -58,6 +58,7 @@ class MazeDisplay:
         self.WIDTH_MAZE = self.WIDTH * 3 // 4
         self.WIDTH_PANEL = self.WIDTH - self.WIDTH_MAZE
         self.maze: MazeGenerator = maze
+        self.first_render: bool = True
         self.start_time: float = 0.0
         self.last_time: float = 0.0
         self.frame_count: int = 0
@@ -139,33 +140,38 @@ class MazeDisplay:
         return 0
 
     def start_render(self):
-        self.render(None)
+        # self.render(None)
 
         # replace with looped render call
-        # self.mlx.mlx_loop_hook(self.mlx_ptr, self.render, None)
+        self.mlx.mlx_loop_hook(self.mlx_ptr, self.render, None)
 
     def render(self, _):
-        self.render_panel()
-        self.mlx.mlx_put_image_to_window(
-            self.mlx_ptr,
-            self.win_ptr,
-            self.panel.img,
-            self.WIDTH_MAZE,
-            0
-        )
-        self.texts.put_texts()
+        if (self.panel.need_update):
+            self.render_panel()
+            self.mlx.mlx_put_image_to_window(
+                self.mlx_ptr,
+                self.win_ptr,
+                self.panel.img,
+                self.WIDTH_MAZE,
+                0
+            )
+            self.panel.need_update = False
 
-        self.render_maze()
-        self.mlx.mlx_put_image_to_window(
-            self.mlx_ptr,
-            self.win_ptr,
-            self.maze_image.img,
-            self.WIDTH_MAZE // 2 - self.total_width // 2,
-            self.HEIGHT // 2 - self.total_height // 2
-        )
+        if self.maze_image.need_update:
+            self.maze_image.need_update = False
+            self.texts.put_texts()
+            self.render_maze()
+            self.mlx.mlx_put_image_to_window(
+                self.mlx_ptr,
+                self.win_ptr,
+                self.maze_image.img,
+                self.WIDTH_MAZE // 2 - self.total_width // 2,
+                self.HEIGHT // 2 - self.total_height // 2
+            )
         return 0
 
     def render_panel(self):
+        print("Rendering panel...")
         image: Image = self.panel
 
         image.draw_rectangle(
@@ -193,12 +199,13 @@ class MazeDisplay:
                 200, 60,
                 0xFFABDAFC,
                 0xFFE5FCFF,
-                lambda: (self.color_schemes.next_scheme(), self.render(None))
+                lambda: self.change_color_scheme()
             )
         )
         pass
 
     def render_maze(self):
+        print("Rendering maze...")
         # image = self.maze_image
         # maze = self.maze
 
@@ -288,6 +295,10 @@ class MazeDisplay:
                             self.color_schemes.get(MazeColors.START))
         self.draw_cell_fill(maze.end[0], maze.end[1],
                             self.color_schemes.get(MazeColors.END))
+
+    def change_color_scheme(self):
+        self.color_schemes.next_scheme()
+        self.maze_image.need_update = True
 
     def get_cell_pos(
         self,
