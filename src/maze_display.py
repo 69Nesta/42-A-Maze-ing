@@ -30,7 +30,7 @@ class MazeDisplaySettings:
         if key in self.settings:
             return self.settings[key]
         return None
-    
+
     def toggle(self, key: str):
         if key in self.settings and isinstance(self.settings[key], bool):
             self.settings[key] = not self.settings[key]
