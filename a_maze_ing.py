@@ -1,5 +1,5 @@
 import sys
-from src.maze_display import MazeDisplay
+from src.display.maze_display import MazeDisplay
 from src.config import ConfigParser
 from src.errors import ConfigError
 from src.maze import MazeGenerator

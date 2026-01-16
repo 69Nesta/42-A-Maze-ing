@@ -1,5 +1,5 @@
-from src.image import Image
-from src.text_manager import TextManager
+from src.display.image import Image
+from src.display.text_manager import TextManager
 
 
 class Button:

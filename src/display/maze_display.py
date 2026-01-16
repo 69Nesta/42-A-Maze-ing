@@ -1,13 +1,13 @@
 from mlx import Mlx
 from enum import Enum
-from src.image import Image
-from src.buttons import ButtonManager, Button, ColorSelector
+from src.display.image import Image
+from src.display.buttons import ButtonManager, Button, ColorSelector
 from src.maze import MazeGenerator
 from src.direction import Direction
 from src.errors import (DisplayMazeToBig)
 from src.cell import Cell
-from src.text_manager import TextManager
-from src.schemes_colors import (MazeColors, MazeSchemesColors)
+from src.display.text_manager import TextManager
+from src.display.schemes_colors import (MazeColors, MazeSchemesColors)
 
 
 class Settings(Enum):
