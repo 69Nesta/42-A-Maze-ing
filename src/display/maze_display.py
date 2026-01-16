@@ -193,7 +193,7 @@ class MazeDisplay:
                 200, 60,
                 0xFFABDAFC,
                 0xFFE5FCFF,
-                lambda: print("Regenerate Maze button pressed.")
+                lambda: self.generate_new_maze()
             )
         )
 
@@ -342,6 +342,10 @@ class MazeDisplay:
         ex, ey = maze.end
         self.draw_cell_fill(sx, sy, self.color_schemes.get(MazeColors.START))
         self.draw_cell_fill(ex, ey, self.color_schemes.get(MazeColors.END))
+
+    def generate_new_maze(self):
+        self.maze.generate()
+        self.maze_image.need_update = True
 
     def change_color_scheme(self):
         self.color_schemes.next_scheme()

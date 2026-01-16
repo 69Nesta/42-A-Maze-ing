@@ -5,24 +5,14 @@ class Cell:
     def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
+        self.is_logo = False
+        self.is_visited = False
         self.walls = {
             Direction.NORTH: True,
             Direction.EAST: True,
             Direction.SOUTH: True,
             Direction.WEST: True,
         }
-
-    @classmethod
-    def create(cls,
-               x: int, y: int,
-               north: bool, east: bool, south: bool, west: bool
-               ) -> 'Cell':
-        cell = cls(x, y)
-        cell.walls[Direction.NORTH] = north
-        cell.walls[Direction.EAST] = east
-        cell.walls[Direction.SOUTH] = south
-        cell.walls[Direction.WEST] = west
-        return cell
 
     def remove_wall(self, direction: Direction):
         self.walls[direction] = False
@@ -35,6 +25,14 @@ class Cell:
                self.walls[Direction.EAST] and \
                self.walls[Direction.SOUTH] and \
                self.walls[Direction.WEST]
+
+    def is_empty(self):
+        return (
+            not self.walls[Direction.NORTH] and
+            not self.walls[Direction.EAST] and
+            not self.walls[Direction.SOUTH] and
+            not self.walls[Direction.WEST]
+        )
 
     def export(self) -> str:
         bits = [
@@ -56,3 +54,22 @@ class Cell:
         self.walls[Direction.EAST] = bits[2] == '1'
         self.walls[Direction.SOUTH] = bits[1] == '1'
         self.walls[Direction.WEST] = bits[0] == '1'
+
+    def set(self, north: bool, east: bool,
+            south: bool, west: bool):
+        self.walls[Direction.NORTH] = north
+        self.walls[Direction.EAST] = east
+        self.walls[Direction.SOUTH] = south
+        self.walls[Direction.WEST] = west
+
+    def del_north(self):
+        self.walls[Direction.NORTH] = False
+
+    def del_east(self):
+        self.walls[Direction.EAST] = False
+
+    def del_south(self):
+        self.walls[Direction.SOUTH] = False
+
+    def del_west(self):
+        self.walls[Direction.WEST] = False
