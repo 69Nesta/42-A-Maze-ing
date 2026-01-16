@@ -14,6 +14,7 @@ class TextManager:
         self.mlx = mlx
         self.mlx_ptr = mlx_ptr
         self.win_ptr = win_ptr
+        self.need_update: bool = True
         self.texts: list[Text] = []
 
     def text_exists(self, x: int, y: int, content: str) -> bool:

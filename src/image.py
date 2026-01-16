@@ -43,6 +43,16 @@ class Image:
     #         for i in range(x, x + w):
     #             self.put_pixel(i, j, color)
 
+    def draw_color_selector(self, x: int, y: int, size: int):
+        for j in range(size):
+            for i in range(size):
+                t = 255
+                r = int((i / (size - 1)) * 255)
+                g = int((j / (size - 1)) * 255)
+                b = int((1 - ((i + j) / (2 * (size - 1)))) * 255)
+                color = (t << 24) | (r << 16) | (g << 8) | b
+                self.put_pixel(x + i, y + j, color)
+
     def draw_line(self, x0: int, y0: int, x1: int, y1: int, color: int):
         dx = abs(x1 - x0)
         dy = abs(y1 - y0)
