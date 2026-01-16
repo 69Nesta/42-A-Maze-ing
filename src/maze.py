@@ -17,19 +17,22 @@ logo = [[1, 0, 0, 0, 1, 1, 1],
 
 class MazeGenerator:
     def __init__(self, config: ConfigParser):
-        self.config = config
-        self.width = self.config.width
-        self.height = self.config.width
-        self.start = self.config.entry
-        self.end = self.config.exit
+        self.config: ConfigParser = config
+        self.width: int = self.config.width
+        self.height: int = self.config.width
+        self.start: tuple[int, int] = self.config.entry
+        self.end: tuple[int, int] = self.config.exit
 
-        self.init_grid()
-        self.path = ''
+        self.grid: list[list[Cell]]
+        self.path: list[Direction]
 
     def init_grid(self):
         self.grid = [
             [Cell(x, y) for x in range(self.width)] for y in range(self.height)
         ]
+
+    def init_path(self):
+        self.path = []
 
     def get_cell(self, x: int, y: int) -> Cell:
         return self.grid[y][x]
@@ -44,20 +47,20 @@ class MazeGenerator:
         return '\n'.join(lines)
 
     def import_maze(self, data: str):
-        lines = data.strip().splitlines()
-        wall_data = lines[:-3]
-        start_coords = tuple(map(int, lines[-3].split(',')))
-        end_coords = tuple(map(int, lines[-2].split(',')))
-        path_directions = lines[-1]
+        lines: str = data.strip().splitlines()
+        wall_data: str = lines[:-3]
+        start_coords: tuple[int, int] = tuple(map(int, lines[-3].split(',')))
+        end_coords: tuple[int, int] = tuple(map(int, lines[-2].split(',')))
+        path_directions: str = lines[-1]
 
         # Parse wall data
         for y, line in enumerate(wall_data):
             for x, char in enumerate(line):
-                cell = self.get_cell(x, y)
+                cell: Cell = self.get_cell(x, y)
                 if char.isdigit():
-                    bits = f"{int(char):04b}"
+                    bits: str = f"{int(char):04b}"
                 else:
-                    bits = f"{int(char, 16):04b}"
+                    bits: str = f"{int(char, 16):04b}"
                 cell.walls[Direction.NORTH] = bits[3] == '1'
                 cell.walls[Direction.EAST] = bits[2] == '1'
                 cell.walls[Direction.SOUTH] = bits[1] == '1'
@@ -65,8 +68,19 @@ class MazeGenerator:
 
         self.start = start_coords
         self.end = end_coords
-
-        self.path = path_directions
+        self.path = []
+        for direction in path_directions:
+            match direction:
+                case 'N':
+                    self.path.append(Direction.NORTH)
+                case 'E':
+                    self.path.append(Direction.EAST)
+                case 'S':
+                    self.path.append(Direction.SOUTH)
+                case 'W':
+                    self.path.append(Direction.WEST)
+                case _:
+                    break
 
     def pathfinding_next_step(
                 self
@@ -77,18 +91,18 @@ class MazeGenerator:
         for direction_char in self.path:
             direction = direction_char.capitalize()
             match direction:
-                case 'N':
+                case Direction.NORTH:
                     y -= 1
-                    yield (x, y, Direction.NORTH)
-                case 'E':
+                    yield (x, y, direction)
+                case Direction.EAST:
                     x += 1
-                    yield (x, y, Direction.EAST)
-                case 'S':
+                    yield (x, y, direction)
+                case Direction.SOUTH:
                     y += 1
-                    yield (x, y, Direction.SOUTH)
-                case 'W':
+                    yield (x, y, direction)
+                case Direction.WEST:
                     x -= 1
-                    yield (x, y, Direction.WEST)
+                    yield (x, y, direction)
                 case _:
                     yield (x, y, None)
 
@@ -96,8 +110,8 @@ class MazeGenerator:
         sx, sy = self.start
         ex, ey = self.end
 
-        self.path = None
         self.init_grid()
+        self.init_path()
         self.display_logo()
         self.back_track(sx, sy)
         self.solve(ex, ey)
@@ -163,19 +177,18 @@ class MazeGenerator:
                     self.back_track(new_x, new_y)
 
     def solve(self, x, y):
-        print("gen path")
-        path = ""
-        solution = MazeGenerator.back_track_find(self, x, y, path)
-        print(solution)
-        self.path = solution
+        self.path = self.back_track_find(x, y, self.path)
+        # self.path = solution
 
-    def back_track_find(self, x, y, path=""):
+    def back_track_find(
+            self,
+            x: int, y: int,
+            path: list[Direction]) -> list[Direction]:
         if self.grid[y][x].is_visited:
-            return False
+            return []
         self.grid[y][x].is_visited = True
 
         if (x, y) == self.end:
-            print("end")
             return path
 
         for direction in Direction:
@@ -183,21 +196,26 @@ class MazeGenerator:
                 continue
 
             new_x, new_y = x, y
+            new_path = path.copy()
             if direction == Direction.NORTH:
                 new_y -= 1
-                new_path = path + "N"
+                new_path.append(Direction.NORTH)
+                # new_path = path + "N"
             elif direction == Direction.EAST:
                 new_x += 1
-                new_path = path + "E"
+                new_path.append(Direction.EAST)
+                # new_path = path + "E"
             elif direction == Direction.SOUTH:
                 new_y += 1
-                new_path = path + "S"
+                new_path.append(Direction.SOUTH)
+                # new_path = path + "S"
             elif direction == Direction.WEST:
                 new_x -= 1
-                new_path = path + "W"
+                new_path.append(Direction.WEST)
+                # new_path = path + "W"
 
             result = self.back_track_find(new_x, new_y, new_path)
-            if result:
+            if len(result) > 0:
                 return result
 
-        return False
+        return []
