@@ -1,6 +1,7 @@
 from src.direction import Direction
 from src.cell import Cell
-from random import shuffle
+from random import shuffle, randint
+
 
 t_point = tuple[int, int]
 
@@ -10,13 +11,14 @@ logo = [[1, 0, 0, 0, 1, 1, 1],
         [0, 0, 1, 0, 1, 0, 0],
         [0, 0, 1, 0, 1, 1, 1]]
 
-class MazeGenerator:
+
+class MazeNewGenerator:
+
     def __init__(self, width: int, height: int):
         self.width = width
         self.height = height
         self.grid = [[Cell(x, y) for x in range(width)] for y in range(height)]
         self.path = ''
-
 
     def get_cell(self, x: int, y: int) -> Cell:
         return self.grid[y][x]
@@ -77,7 +79,6 @@ class MazeGenerator:
             case _:
                 return (x, y, None)
 
-
     def generate(self, data: str):
         lines = data.strip().splitlines()
         start_coords = tuple(map(int, lines[-3].split(',')))
@@ -94,49 +95,8 @@ class MazeGenerator:
                 if logo[i][j] == 1:
                     self.grid[int(center_y) + i][int(center_x) + j].is_logo = True
 
-    def create(self, x, y):
-        directions = [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]
-        shuffle(directions)
-
-        for direction in directions:
-            new_x = x
-            new_y = y
-
-            if direction == Direction.NORTH:
-                new_y -= 1
-            elif direction == Direction.EAST:
-                new_x += 1
-            elif direction == Direction.SOUTH:
-                new_y += 1
-            elif direction == Direction.WEST:
-                new_x -= 1
-
-            if 0 <= new_x < self.width and 0 <= new_y < self.height:
-
-                if self.grid[new_y][new_x].is_full() and not self.grid[new_y][new_x].is_logo:
-
-                    if direction == Direction.NORTH:
-                        self.grid[y][x].del_north()
-                        self.grid[new_y][new_x].del_south()
-
-                    elif direction == Direction.SOUTH:
-                        self.grid[y][x].del_south()
-                        self.grid[new_y][new_x].del_north()
-
-                    elif direction == Direction.EAST:
-                        self.grid[y][x].del_east()
-                        self.grid[new_y][new_x].del_west()
-
-                    elif direction == Direction.WEST:
-                        self.grid[y][x].del_west()
-                        self.grid[new_y][new_x].del_east()
-                    if (new_x, new_y) == self.end:
-                        return
-
-                    self.create(new_x, new_y)
-
     def solve(self, x, y):
-        solution = MazeGenerator.back_track_find(self, x, y)
+        solution = MazeNewGenerator.back_track_find(self, x, y)
         print(solution)
         self.path = solution
 
@@ -173,5 +133,39 @@ class MazeGenerator:
 
         return False
 
+    def create(self, y, x):
+        next = [self.grid[y][x]]
+        self.grid[y][x].is_next = True
 
+        while next:
+            next_cell = next.pop(randint(0, len(next)-1))
+            if next_cell.x != self.end[0] or next_cell.y != self.end[1]:
+                if next_cell.y - 1 >= 0:
+                    new = self.grid[next_cell.y - 1][next_cell.x]
+                    if not new.is_next and new.is_logo is False:
+                        new.is_next = True
+                        next.append(new)
+                        next_cell.del_north()
+                        new.del_south()
+                if next_cell.y + 1 < self.height:
+                    new = self.grid[next_cell.y + 1][next_cell.x]
+                    if not new.is_next and new.is_logo is False:
+                        new.is_next = True
+                        next.append(new)
+                        next_cell.del_south()
+                        new.del_north()
+                if next_cell.x - 1 >= 0:
+                    new = self.grid[next_cell.y][next_cell.x - 1]
+                    if not new.is_next and new.is_logo is False:
+                        new.is_next = True
+                        next.append(new)
+                        next_cell.del_west()
+                        new.del_east()
+                if next_cell.x + 1 < self.width:
+                    new = self.grid[next_cell.y][next_cell.x + 1]
+                    if not new.is_next and new.is_logo is False:
+                        new.is_next = True
+                        next.append(new)
+                        next_cell.del_east()
+                        new.del_west()
 

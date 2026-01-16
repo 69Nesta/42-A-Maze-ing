@@ -319,7 +319,6 @@ class MazeDisplay:
         cell_size = self.cell_size
         _, _, x1, y1, _, _ = self.get_cell_pos(x, y)
 
-        print(f"Filling cell at ({x}, {y}) -> pixel ({x1}, {y1})")
 
         image.draw_rectangle(
             x1, y1,
