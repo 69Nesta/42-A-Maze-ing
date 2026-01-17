@@ -1,21 +1,16 @@
 import sys
-# from src.display.maze_display import MazeDisplay
-from src.config import Config, EConfig
+from src.display.maze_display import MazeDisplay
+from src.config import Config
 from src.errors import ConfigError
-# from src.maze import MazeGenerator
+from src.maze import MazeGenerator
 
 
 class AMazeIng:
     def __init__(self, config_file: str):
         self.config = Config(config_file)
-        print(self.config.get_int(EConfig.WIDTH).get_value())
-        # self.maze = MazeGenerator(self.config)
-        # maze_data = ''
-        # with open(self.config.output_file, 'r') as f:
-        #     maze_data = f.read()
-        # self.maze.import_maze(maze_data)
-        # self.maze.generate()
-        # self.renderer = MazeDisplay(self.maze)
+        self.maze = MazeGenerator(self.config)
+        self.maze.generate()
+        self.renderer = MazeDisplay(self.maze)
 
 
 if __name__ == '__main__':

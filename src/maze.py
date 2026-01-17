@@ -1,7 +1,7 @@
 from typing import Generator
 from src.direction import Direction
 from src.cell import Cell
-from src.config import ConfigParser
+from src.config import Config, EConfig
 from random import shuffle
 # from time import sleep
 
@@ -16,12 +16,12 @@ logo = [[1, 0, 0, 0, 1, 1, 1],
 
 
 class MazeGenerator:
-    def __init__(self, config: ConfigParser):
-        self.config: ConfigParser = config
-        self.width: int = self.config.width
-        self.height: int = self.config.height
-        self.start: t_point = self.config.entry
-        self.end: t_point = self.config.exit
+    def __init__(self, config: Config):
+        self.config: Config = config
+        self.width: int = self.config.get_int(EConfig.WIDTH).get_value()
+        self.height: int = self.config.get_int(EConfig.HEIGHT).get_value()
+        self.start: t_point = self.config.get_coords(EConfig.ENTRY).get_value()
+        self.end: t_point = self.config.get_coords(EConfig.EXIT).get_value()
 
         self.grid: list[list[Cell]]
         self.path: list[Direction]
