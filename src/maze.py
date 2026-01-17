@@ -40,6 +40,7 @@ class MazeGenerator:
         self.grid: list[list[Cell]]
         self.path: list[Direction]
         self.generate_order: list[Coords]
+        self.generate_order_size: int = 0
 
     def init_grid(self):
         self.grid = [
@@ -135,6 +136,7 @@ class MazeGenerator:
         self.init_generate_order()
         self.display_logo()
         self.back_track(sx, sy)
+        self.generate_order_size = len(self.generate_order)
         self.solve(ex, ey)
 
     def display_logo(self):
@@ -143,11 +145,11 @@ class MazeGenerator:
         for i in range(len(logo)):
             for j in range(len(logo[i])):
                 if logo[i][j] == 1:
-                    self.grid[
-                        int(center_y) + i
-                    ][
-                        int(center_x) + j
-                    ].is_logo = True
+                    x = int(center_x) + j
+                    y = int(center_y) + i
+
+                    self.grid[y][x].is_logo = True
+                    self.generate_order.append(Coords(x, y))
 
     def back_track(self, x, y):
         directions = [
@@ -157,6 +159,10 @@ class MazeGenerator:
             Direction.WEST
         ]
         shuffle(directions)
+
+        if not self.grid[y][x].is_visited:
+            self.generate_order.append(Coords(x, y))
+            self.grid[y][x].is_visited = True
 
         for direction in directions:
             new_x = x
@@ -171,11 +177,12 @@ class MazeGenerator:
             elif direction == Direction.WEST:
                 new_x -= 1
 
-            self.generate_order.append(Coords(new_x, new_y))
-
             if (0 <= new_x < self.width and 0 <= new_y < self.height):
                 if (self.grid[new_y][new_x].is_full()
                    and not self.grid[new_y][new_x].is_logo):
+                    if not self.grid[y][x].is_visited:
+                        self.generate_order.append(Coords(new_x, new_y))
+                        self.grid[y][x].is_visited = True
 
                     match direction:
                         case Direction.NORTH:

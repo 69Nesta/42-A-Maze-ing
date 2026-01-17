@@ -79,6 +79,4 @@ class Image:
         return int.from_bytes(pixel_bytes, 'little')
 
     def clear(self, color: int):
-        for y in range(self.height):
-            for x in range(self.width):
-                self.put_pixel(x, y, color)
+        self.draw_rectangle(0, 0, self.width, self.height, color)

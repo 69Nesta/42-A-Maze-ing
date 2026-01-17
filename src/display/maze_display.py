@@ -15,6 +15,8 @@ class Settings(Enum):
     SHOW_FPS = 'show_fps'
     SHOW_PATHFINDING = 'show_pathfinding'
     CUSTOM_LOGO_COLOR = 'custom_logo_color'
+    ANIMATION_MAZE_GENERATION = 'animation_maze_generation'
+    ANIMATION_PATHFINDING = 'animation_pathfinding'
 
 
 class MazeDisplaySettings:
@@ -32,6 +34,53 @@ class MazeDisplaySettings:
     def toggle(self, key: Settings) -> None:
         if key in self.settings and isinstance(self.settings[key], bool):
             self.settings[key] = not self.settings[key]
+
+
+class AnimationState:
+    def __init__(self, speed: float, max_step: int) -> None:
+        self.finished: bool = False
+        self.started: bool = False
+        self.started_at: float = 0.0
+        self.speed: float = speed
+        self.last_update_time: float = 0.0
+        self.max_step: int = max_step
+        self.index: int = 0
+
+    def start(self, current_time) -> None:
+        self.started = True
+        self.finished = False
+        self.last_update_time = current_time
+        self.started_at = self.last_update_time
+
+    def stop(self) -> None:
+        self.started = False
+        self.finished = True
+        self.last_update_time = 0.0
+        self.started_at = self.last_update_time
+
+    def update(self, current_time) -> bool:
+        if not self.started or self.finished:
+            return False
+        elapsed_time = current_time - self.last_update_time
+        if elapsed_time >= self.speed / 1000:
+            self.last_update_time = current_time
+            return True
+        return False
+
+    def reset(self) -> None:
+        self.finished = False
+        self.started = False
+        self.started_at = 0.0
+        self.last_update_time = 0.0
+        self.index = 0
+
+    def get_next_step(self) -> int | None:
+        index = self.index
+        self.index += 1
+        if self.index >= self.max_step:
+            self.finished = True
+            return None
+        return index
 
 
 class MazeDisplay:
@@ -68,6 +117,8 @@ class MazeDisplay:
             Settings.SHOW_FPS: True,
             Settings.SHOW_PATHFINDING: False,
             Settings.CUSTOM_LOGO_COLOR: False,
+            Settings.ANIMATION_MAZE_GENERATION: True,
+            Settings.ANIMATION_PATHFINDING: False,
         })
 
         self.custom_logo_color: int = 0xFFFF0000
@@ -129,6 +180,10 @@ class MazeDisplay:
                 self.WIDTH_MAZE - self.MAZE_PADDING,
                 self.HEIGHT - self.MAZE_PADDING
             )
+        self.maze_animation: AnimationState = AnimationState(
+            0.01,
+            self.maze.generate_order_size
+        )
 
         self.mlx.mlx_hook(self.win_ptr, 33, 1 << 17, self.close, None)
         self.mlx.mlx_key_hook(self.win_ptr, self.key_hook, None)
@@ -189,7 +244,12 @@ class MazeDisplay:
 
         if self.maze_image.need_update:
             self.maze_image.need_update = False
-            self.render_maze()
+            # self.render_maze()
+            if (self.settings.get(Settings.ANIMATION_MAZE_GENERATION) and
+               not self.maze_animation.finished):
+                self.draw_maze_animation(current_time)
+            else:
+                self.render_maze()
 
         self.mlx.mlx_put_image_to_window(
             self.mlx_ptr,
@@ -276,7 +336,7 @@ class MazeDisplay:
                 200, 60,
                 0xFFABDAFC,
                 0xFFE5FCFF,
-                lambda: self.toggle_setting(Settings.SHOW_PATHFINDING)
+                lambda: self.toggle_pathfinding()
             )
         )
 
@@ -323,8 +383,7 @@ class MazeDisplay:
     def draw_maze(self) -> None:
         image: Image = self.maze_image
         maze: MazeGenerator = self.maze
-
-        cell_size = self.cell_size
+        cell_size: int = self.cell_size
 
         image.draw_rectangle(
             0, 0,
@@ -333,12 +392,11 @@ class MazeDisplay:
             self.color_schemes.get(MazeColors.BACKGROUND)
         )
 
-        logo_color = self.color_schemes.get(MazeColors.LOGO)
+        logo_color: int = self.color_schemes.get(MazeColors.LOGO)
         if self.settings.get(Settings.CUSTOM_LOGO_COLOR):
             logo_color = self.custom_logo_color
 
-        wall_color = self.color_schemes.get(MazeColors.WALL)
-
+        wall_color: int = self.color_schemes.get(MazeColors.WALL)
         for y in range(maze.height):
             for x in range(maze.width):
                 cell = maze.get_cell(x, y)
@@ -355,6 +413,76 @@ class MazeDisplay:
                     )
 
         self.draw_start_end()
+
+    def draw_maze_animation(self, current_time) -> None:
+        maze: MazeGenerator = self.maze
+
+        logo_color: int = self.color_schemes.get(MazeColors.LOGO)
+        if self.settings.get(Settings.CUSTOM_LOGO_COLOR):
+            logo_color = self.custom_logo_color
+        wall_color: int = self.color_schemes.get(MazeColors.WALL)
+        if not self.maze_animation.started:
+            self.maze_animation.start(current_time)
+        if self.maze_animation.update(current_time):
+            step_index = self.maze_animation.get_next_step()
+            if step_index is None:
+                self.maze_animation.stop()
+                self.draw_start_end()
+                return
+            x, y = (
+                maze.generate_order[step_index].x,
+                maze.generate_order[step_index].y
+            )
+            print(f"Animating maze generation: step {step_index} at ({x}, {y})")
+            cell = maze.get_cell(x, y)
+            self.draw_cell_border(
+                cell,
+                x,
+                y,
+                wall_color
+            )
+            if cell.is_full():
+                self.draw_cell_fill(
+                    x, y,
+                    logo_color
+                )
+            match (x, y):
+                case maze.start:
+                    self.draw_start()
+                case maze.end:
+                    self.draw_end()
+
+        if not self.maze_animation.finished:
+            self.maze_image.need_update = True
+
+    def redraw_middle_maze_animation(self) -> None:
+        maze: MazeGenerator = self.maze
+        image: Image = self.maze_image
+        cell_size: int = self.cell_size
+
+        image.draw_rectangle(
+            0, 0,
+            cell_size * maze.width * 2 + cell_size,
+            cell_size * maze.height * 2 + cell_size,
+            self.color_schemes.get(MazeColors.BACKGROUND)
+        )
+
+        logo_color: int = self.color_schemes.get(MazeColors.LOGO)
+        if self.settings.get(Settings.CUSTOM_LOGO_COLOR):
+            logo_color = self.custom_logo_color
+        wall_color: int = self.color_schemes.get(MazeColors.WALL)
+
+        for step_index in range(self.maze_animation.index):
+            x, y = (
+                maze.generate_order[step_index].x,
+                maze.generate_order[step_index].y
+            )
+            cell = maze.get_cell(x, y)
+            self.draw_cell_animate(
+                x, y,
+                cell,
+                wall_color, logo_color
+            )
 
     def draw_pathfinding(self) -> None:
         print("Drawing pathfinding...")
@@ -406,22 +534,67 @@ class MazeDisplay:
         self.draw_start_end()
         pass
 
-    def draw_start_end(self) -> None:
+    def draw_cell_animate(
+                self,
+                x: int, y: int,
+                cell: Cell,
+                wall_color: int, logo_color: int
+            ) -> None:
+        self.draw_cell_border(
+            cell,
+            x,
+            y,
+            wall_color
+        )
+        if cell.is_full():
+            self.draw_cell_fill(
+                x, y,
+                logo_color
+            )
+        match (x, y):
+            case self.maze.start:
+                self.draw_start()
+            case self.maze.end:
+                self.draw_end()
+
+    def draw_start(self) -> None:
         maze: MazeGenerator = self.maze
 
         sx, sy = maze.start
-        ex, ey = maze.end
         self.draw_cell_fill(sx, sy, self.color_schemes.get(MazeColors.START))
+
+    def draw_end(self) -> None:
+        maze: MazeGenerator = self.maze
+
+        ex, ey = maze.end
         self.draw_cell_fill(ex, ey, self.color_schemes.get(MazeColors.END))
+
+    def draw_start_end(self) -> None:
+        self.draw_start()
+        self.draw_end()
 
     def generate_new_maze(self) -> None:
         self.maze.generate()
+        self.maze_animation.reset()
+        self.maze_image.clear(self.color_schemes.get(MazeColors.BACKGROUND))
         self.maze_image.need_update = True
+        if (self.settings.get(Settings.ANIMATION_MAZE_GENERATION)):
+            self.settings.set(Settings.SHOW_PATHFINDING, False)
 
     def change_color_scheme(self) -> None:
         self.color_schemes.next_scheme()
+        if (self.settings.get(Settings.ANIMATION_MAZE_GENERATION)):
+            self.redraw_middle_maze_animation()
         self.maze_image.need_update = True
         self.background_image.need_update = True
+
+    def toggle_pathfinding(self) -> None:
+        settings: MazeDisplaySettings = self.settings
+        if (settings.get(Settings.ANIMATION_MAZE_GENERATION)
+           and not self.maze_animation.finished):
+            return
+        self.settings.toggle(Settings.SHOW_PATHFINDING)
+        self.maze_image.need_update = True
 
     def toggle_setting(self, setting: Settings) -> None:
         self.settings.toggle(setting)
