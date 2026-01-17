@@ -19,9 +19,9 @@ class MazeGenerator:
     def __init__(self, config: ConfigParser):
         self.config: ConfigParser = config
         self.width: int = self.config.width
-        self.height: int = self.config.width
-        self.start: tuple[int, int] = self.config.entry
-        self.end: tuple[int, int] = self.config.exit
+        self.height: int = self.config.height
+        self.start: t_point = self.config.entry
+        self.end: t_point = self.config.exit
 
         self.grid: list[list[Cell]]
         self.path: list[Direction]
@@ -47,20 +47,23 @@ class MazeGenerator:
         return '\n'.join(lines)
 
     def import_maze(self, data: str):
-        lines: str = data.strip().splitlines()
-        wall_data: str = lines[:-3]
-        start_coords: tuple[int, int] = tuple(map(int, lines[-3].split(',')))
-        end_coords: tuple[int, int] = tuple(map(int, lines[-2].split(',')))
+        lines: list[str] = data.strip().splitlines()
+        wall_data: list[str] = lines[:-3]
+        sx, sy = map(int, lines[-3].split(','))
+        start_coords: t_point = (sx, sy)
+        ex, ey = map(int, lines[-2].split(','))
+        end_coords: t_point = (ex, ey)
         path_directions: str = lines[-1]
 
         # Parse wall data
         for y, line in enumerate(wall_data):
             for x, char in enumerate(line):
                 cell: Cell = self.get_cell(x, y)
+                bits: str
                 if char.isdigit():
-                    bits: str = f"{int(char):04b}"
+                    bits = f"{int(char):04b}"
                 else:
-                    bits: str = f"{int(char, 16):04b}"
+                    bits = f"{int(char, 16):04b}"
                 cell.walls[Direction.NORTH] = bits[3] == '1'
                 cell.walls[Direction.EAST] = bits[2] == '1'
                 cell.walls[Direction.SOUTH] = bits[1] == '1'
@@ -86,10 +89,9 @@ class MazeGenerator:
                 self
                 ) -> Generator[tuple[int, int, Direction], None, None]:
         if not self.start or not self.end or not self.path:
-            return (0, 0, None)
+            return
         x, y = self.start
-        for direction_char in self.path:
-            direction = direction_char.capitalize()
+        for direction in self.path:
             match direction:
                 case Direction.NORTH:
                     y -= 1
@@ -176,9 +178,46 @@ class MazeGenerator:
 
                     self.back_track(new_x, new_y)
 
-    def solve(self, x, y):
-        self.path = self.back_track_find(x, y, self.path)
-        # self.path = solution
+    def solve(self, x: int, y: int) -> None:
+        self.path = self.a_star_find(x, y)
+
+    def a_star_find(self, x: int, y: int) -> list[Direction]:
+        queue: list[tuple[int, int, list[Direction]]] = []
+        visited: set[tuple[int, int]] = set()
+
+        queue.append((x, y, []))
+        while queue:
+            current_x, current_y, path = queue.pop(0)
+
+            if (current_x, current_y) in visited:
+                continue
+            visited.add((current_x, current_y))
+
+            if (current_x, current_y) == self.start:
+                return path[::-1]
+
+            for direction in Direction:
+                if self.grid[current_y][current_x].has_wall(direction):
+                    continue
+
+                new_x, new_y = current_x, current_y
+                new_path = path.copy()
+                if direction == Direction.NORTH:
+                    new_y -= 1
+                    new_path.append(Direction.SOUTH)
+                elif direction == Direction.EAST:
+                    new_x += 1
+                    new_path.append(Direction.WEST)
+                elif direction == Direction.SOUTH:
+                    new_y += 1
+                    new_path.append(Direction.NORTH)
+                elif direction == Direction.WEST:
+                    new_x -= 1
+                    new_path.append(Direction.EAST)
+
+                queue.append((new_x, new_y, new_path))
+
+        return []
 
     def back_track_find(
             self,

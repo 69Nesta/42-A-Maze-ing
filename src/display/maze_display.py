@@ -16,18 +16,18 @@ class Settings(Enum):
 
 
 class MazeDisplaySettings:
-    def __init__(self, defaults: dict = {}):
+    def __init__(self, defaults: dict[Settings, bool] = {}):
         self.settings = defaults
 
-    def set(self, key: str, value: bool):
+    def set(self, key: Settings, value: bool):
         self.settings[key] = value
 
-    def get(self, key: str) -> bool | None:
+    def get(self, key: Settings) -> bool | None:
         if key in self.settings:
             return self.settings[key]
         return None
 
-    def toggle(self, key: str) -> None:
+    def toggle(self, key: Settings) -> None:
         if key in self.settings and isinstance(self.settings[key], bool):
             self.settings[key] = not self.settings[key]
 
@@ -40,7 +40,7 @@ class MazeDisplay:
     WIDTH_MAZE: int
     WIDTH_PANEL: int
 
-    def __init__(self, maze):
+    def __init__(self, maze: MazeGenerator) -> None:
         self.maze = maze
 
         self.mlx: Mlx = Mlx()
@@ -63,7 +63,7 @@ class MazeDisplay:
         self.last_time: float = 0.0
         self.frame_count: int = 0
         self.settings: MazeDisplaySettings = MazeDisplaySettings({
-            Settings.SHOW_PATHFINDING: True,
+            Settings.SHOW_PATHFINDING: False,
             Settings.CUSTOM_LOGO_COLOR: False,
         })
 
@@ -127,7 +127,7 @@ class MazeDisplay:
         self.start_render()
         self.mlx.mlx_loop(self.mlx_ptr)
 
-    def close(self, _):
+    def close(self, _) -> int:
         try:
             self.panel.destroy(self.mlx, self.mlx_ptr)
             self.maze_image.destroy(self.mlx, self.mlx_ptr)
@@ -139,13 +139,13 @@ class MazeDisplay:
                 pass
         return 0
 
-    def start_render(self):
+    def start_render(self) -> None:
         # self.render(None)
 
         # replace with looped render call
         self.mlx.mlx_loop_hook(self.mlx_ptr, self.render, None)
 
-    def render(self, _):
+    def render(self, _) -> int:
         if (self.panel.need_update):
             self.render_panel()
             self.mlx.mlx_put_image_to_window(
@@ -175,7 +175,7 @@ class MazeDisplay:
             self.first_render = False
         return 0
 
-    def render_panel(self):
+    def render_panel(self) -> None:
         print("Rendering panel...")
         image: Image = self.panel
 
@@ -243,13 +243,13 @@ class MazeDisplay:
         # image.draw_color_selector(10, 290, 100)
         pass
 
-    def render_maze(self):
+    def render_maze(self) -> None:
         print("Rendering maze...")
         self.draw_maze()
         if self.settings.get(Settings.SHOW_PATHFINDING):
             self.draw_pathfinding()
 
-    def draw_maze(self):
+    def draw_maze(self) -> None:
         image: Image = self.maze_image
         maze: MazeGenerator = self.maze
 
@@ -285,7 +285,7 @@ class MazeDisplay:
 
         self.draw_start_end()
 
-    def draw_pathfinding(self):
+    def draw_pathfinding(self) -> None:
         print("Drawing pathfinding...")
         image: Image = self.maze_image
         maze: MazeGenerator = self.maze
@@ -335,7 +335,7 @@ class MazeDisplay:
         self.draw_start_end()
         pass
 
-    def draw_start_end(self):
+    def draw_start_end(self) -> None:
         maze: MazeGenerator = self.maze
 
         sx, sy = maze.start
@@ -343,19 +343,19 @@ class MazeDisplay:
         self.draw_cell_fill(sx, sy, self.color_schemes.get(MazeColors.START))
         self.draw_cell_fill(ex, ey, self.color_schemes.get(MazeColors.END))
 
-    def generate_new_maze(self):
+    def generate_new_maze(self) -> None:
         self.maze.generate()
         self.maze_image.need_update = True
 
-    def change_color_scheme(self):
+    def change_color_scheme(self) -> None:
         self.color_schemes.next_scheme()
         self.maze_image.need_update = True
 
-    def toggle_setting(self, setting: Settings):
+    def toggle_setting(self, setting: Settings) -> None:
         self.settings.toggle(setting)
         self.maze_image.need_update = True
 
-    def set_custom_logo_color(self, color: int):
+    def set_custom_logo_color(self, color: int) -> None:
         self.custom_logo_color = color
         self.settings.set(Settings.CUSTOM_LOGO_COLOR, True)
         self.maze_image.need_update = True
@@ -407,7 +407,7 @@ class MazeDisplay:
         cell_size: int = self.cell_size
         _, _, x1, y1, _, _ = self.get_cell_pos(x, y)
 
-        print(f"Filling cell at ({x}, {y}) -> pixel ({x1}, {y1})")
+        # print(f"Filling cell at ({x}, {y}) -> pixel ({x1}, {y1})")
 
         image.draw_rectangle(
             x1, y1,
