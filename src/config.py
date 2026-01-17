@@ -146,6 +146,19 @@ class Config:
 
     def get(self, key: EConfig) -> ConfigValue:
         config_value = self.parser.get(key)
-        if config_value is None:
-            raise ConfigMissingError(str(key.value))
         return config_value
+
+    def get_int(self, key: EConfig) -> ConfigValue[int]:
+        return cast(ConfigValue[int], self.parser.get(key))
+
+    def get_str(self, key: EConfig) -> ConfigValue[str]:
+        return cast(ConfigValue[str], self.parser.get(key))
+
+    def get_coords(self, key: EConfig) -> ConfigValue[tuple]:
+        return cast(ConfigValue[tuple], self.parser.get(key))
+
+    def get_bool(self, key: EConfig) -> ConfigValue[bool]:
+        return cast(ConfigValue[bool], self.parser.get(key))
+
+    def get_float(self, key: EConfig) -> ConfigValue[float]:
+        return cast(ConfigValue[float], self.parser.get(key))

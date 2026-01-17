@@ -8,7 +8,7 @@ from src.errors import ConfigError
 class AMazeIng:
     def __init__(self, config_file: str):
         self.config = Config(config_file)
-        print(self.config.get(EConfig.WIDTH).get_value())
+        print(self.config.get_int(EConfig.WIDTH).get_value())
         # self.maze = MazeGenerator(self.config)
         # maze_data = ''
         # with open(self.config.output_file, 'r') as f:
