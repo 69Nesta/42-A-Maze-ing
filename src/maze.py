@@ -15,6 +15,20 @@ logo = [[1, 0, 0, 0, 1, 1, 1],
         [0, 0, 1, 0, 1, 1, 1]]
 
 
+class Coords:
+    def __init__(self, x: int, y: int):
+        self.x: int = x
+        self.y: int = y
+
+    def to_tuple(self) -> t_point:
+        return (self.x, self.y)
+
+    @classmethod
+    def from_tuple(cls, coords: t_point) -> 'Coords':
+        x, y = coords
+        return cls(x, y)
+
+
 class MazeGenerator:
     def __init__(self, config: Config):
         self.config: Config = config
@@ -25,6 +39,7 @@ class MazeGenerator:
 
         self.grid: list[list[Cell]]
         self.path: list[Direction]
+        self.generate_order: list[Coords]
 
     def init_grid(self):
         self.grid = [
@@ -33,6 +48,9 @@ class MazeGenerator:
 
     def init_path(self):
         self.path = []
+
+    def init_generate_order(self):
+        self.generate_order = []
 
     def get_cell(self, x: int, y: int) -> Cell:
         return self.grid[y][x]
@@ -114,6 +132,7 @@ class MazeGenerator:
 
         self.init_grid()
         self.init_path()
+        self.init_generate_order()
         self.display_logo()
         self.back_track(sx, sy)
         self.solve(ex, ey)
@@ -151,6 +170,8 @@ class MazeGenerator:
                 new_y += 1
             elif direction == Direction.WEST:
                 new_x -= 1
+
+            self.generate_order.append(Coords(new_x, new_y))
 
             if (0 <= new_x < self.width and 0 <= new_y < self.height):
                 if (self.grid[new_y][new_x].is_full()
@@ -216,45 +237,5 @@ class MazeGenerator:
                     new_path.append(Direction.EAST)
 
                 queue.append((new_x, new_y, new_path))
-
-        return []
-
-    def back_track_find(
-            self,
-            x: int, y: int,
-            path: list[Direction]) -> list[Direction]:
-        if self.grid[y][x].is_visited:
-            return []
-        self.grid[y][x].is_visited = True
-
-        if (x, y) == self.end:
-            return path
-
-        for direction in Direction:
-            if self.grid[y][x].has_wall(direction):
-                continue
-
-            new_x, new_y = x, y
-            new_path = path.copy()
-            if direction == Direction.NORTH:
-                new_y -= 1
-                new_path.append(Direction.NORTH)
-                # new_path = path + "N"
-            elif direction == Direction.EAST:
-                new_x += 1
-                new_path.append(Direction.EAST)
-                # new_path = path + "E"
-            elif direction == Direction.SOUTH:
-                new_y += 1
-                new_path.append(Direction.SOUTH)
-                # new_path = path + "S"
-            elif direction == Direction.WEST:
-                new_x -= 1
-                new_path.append(Direction.WEST)
-                # new_path = path + "W"
-
-            result = self.back_track_find(new_x, new_y, new_path)
-            if len(result) > 0:
-                return result
 
         return []

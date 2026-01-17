@@ -1,3 +1,4 @@
+from typing import Callable
 from src.display.image import Image
 from src.display.text_manager import TextManager
 
@@ -9,7 +10,7 @@ class Button:
                  width: int, height: int,
                  background: int,
                  text_color: int,
-                 callback: callable = None):
+                 callback: Callable | None = None):
         self.label: str = label
         self.x: int = x
         self.y: int = y
@@ -17,10 +18,10 @@ class Button:
         self.height: int = height
         self.background: int = background
         self.text_color: int = text_color
-        self.callback: callable = callback
+        self.callback: Callable | None = callback
 
-    def execute(self):
-        if self.callback:
+    def execute(self) -> None:
+        if self.callback is not None:
             self.callback()
 
 
@@ -30,13 +31,13 @@ class ColorSelector:
                  x: int, y: int,
                  size: int,
                  label_color: int,
-                 callback: callable = None):
+                 callback: Callable | None = None):
         self.x: int = x
         self.y: int = y
         self.size: int = size
         self.label: str = label
         self.label_color: int = label_color
-        self.callback: callable = callback
+        self.callback: Callable | None = callback
         self.offset_y: int = 20
 
     def collide(self, x: int, y: int) -> bool:
@@ -44,8 +45,8 @@ class ColorSelector:
         return (self.x <= x <= self.x + self.size - 1 and
                 self.y + offset_y <= y <= self.y + offset_y + self.size - 1)
 
-    def execute(self, color: int):
-        if self.callback:
+    def execute(self, color: int) -> None:
+        if self.callback is not None:
             self.callback(color)
 
 
@@ -62,7 +63,7 @@ class ButtonManager:
         self.offset_x = offset_x
         self.texts = text_manager
 
-    def add_button(self, button: Button) -> None:
+    def add_button(self, id: str, button: Button) -> None:
         image = self.image
         self.buttons.append(button)
 
@@ -77,13 +78,14 @@ class ButtonManager:
             button.background
         )
         self.texts.create_text(
+            id,
             self.offset_x + x0 + (button.width - w) // 2,
             y0 + ((button.height - h) // 2),
             button.text_color,
             button.label
         )
 
-    def add_color_selector(self, selector: ColorSelector) -> None:
+    def add_color_selector(self, id: str, selector: ColorSelector) -> None:
         image = self.image
         size = selector.size
 
@@ -92,6 +94,7 @@ class ButtonManager:
             selector.x, selector.y + selector.offset_y,
             size)
         self.texts.create_text(
+            id,
             self.offset_x + selector.x,
             selector.y - 5,
             selector.label_color,

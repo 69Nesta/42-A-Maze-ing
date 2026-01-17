@@ -1,3 +1,4 @@
+import time
 from mlx import Mlx
 from enum import Enum
 from src.display.image import Image
@@ -11,6 +12,7 @@ from src.display.schemes_colors import (MazeColors, MazeSchemesColors)
 
 
 class Settings(Enum):
+    SHOW_FPS = 'show_fps'
     SHOW_PATHFINDING = 'show_pathfinding'
     CUSTOM_LOGO_COLOR = 'custom_logo_color'
 
@@ -41,8 +43,6 @@ class MazeDisplay:
     WIDTH_PANEL: int
 
     def __init__(self, maze: MazeGenerator) -> None:
-        self.maze = maze
-
         self.mlx: Mlx = Mlx()
         self.mlx_ptr = self.mlx.mlx_init()
         _, screen_w, screen_h = self.mlx.mlx_get_screen_size(self.mlx_ptr)
@@ -58,16 +58,25 @@ class MazeDisplay:
         self.WIDTH_MAZE = self.WIDTH * 3 // 4
         self.WIDTH_PANEL = self.WIDTH - self.WIDTH_MAZE
         self.maze: MazeGenerator = maze
+
         self.first_render: bool = True
         self.start_time: float = 0.0
         self.last_time: float = 0.0
         self.frame_count: int = 0
+
         self.settings: MazeDisplaySettings = MazeDisplaySettings({
+            Settings.SHOW_FPS: True,
             Settings.SHOW_PATHFINDING: False,
             Settings.CUSTOM_LOGO_COLOR: False,
         })
 
         self.custom_logo_color: int = 0xFFFF0000
+
+        self.background_image = Image(
+            self.mlx, self.mlx_ptr,
+            self.WIDTH - self.WIDTH_PANEL,
+            self.HEIGHT
+        )
 
         self.panel: Image = Image(
                 self.mlx, self.mlx_ptr,
@@ -143,11 +152,18 @@ class MazeDisplay:
         # self.render(None)
 
         # replace with looped render call
+        self.start_time = time.time()
         self.mlx.mlx_loop_hook(self.mlx_ptr, self.render, None)
 
     def render(self, _) -> int:
+        current_time = time.time()
+        elapsed_time = current_time - self.last_time
+        # total_elapsed_time = current_time - self.start_time
+        fps = 1.0 / elapsed_time if elapsed_time > 0 else 0.0
+
         if (self.panel.need_update):
             self.render_panel()
+            self.panel.need_update = False
             self.mlx.mlx_put_image_to_window(
                 self.mlx_ptr,
                 self.win_ptr,
@@ -155,25 +171,67 @@ class MazeDisplay:
                 self.WIDTH_MAZE,
                 0
             )
-            self.panel.need_update = False
 
-        if self.texts.need_update:
-            self.texts.need_update = False
+        if (self.background_image.need_update):
+            self.render_background()
+            self.background_image.need_update = False
+        self.render_fps(fps)
+        self.mlx.mlx_put_image_to_window(
+            self.mlx_ptr,
+            self.win_ptr,
+            self.background_image.img,
+            0,
+            0
+        )
+
+        if self.texts.need_update_texts():
             self.texts.put_texts()
 
         if self.maze_image.need_update:
             self.maze_image.need_update = False
             self.render_maze()
-            self.mlx.mlx_put_image_to_window(
-                self.mlx_ptr,
-                self.win_ptr,
-                self.maze_image.img,
-                self.WIDTH_MAZE // 2 - self.total_width // 2,
-                self.HEIGHT // 2 - self.total_height // 2
-            )
+
+        self.mlx.mlx_put_image_to_window(
+            self.mlx_ptr,
+            self.win_ptr,
+            self.maze_image.img,
+            self.WIDTH_MAZE // 2 - self.total_width // 2,
+            self.HEIGHT // 2 - self.total_height // 2
+        )
+
         if (self.first_render):
             self.first_render = False
+        self.frame_count += 1
+        self.last_time = current_time
         return 0
+
+    def render_fps(self, fps: float) -> None:
+        if not self.settings.get(Settings.SHOW_FPS):
+            return
+        self.background_image.draw_rectangle(
+            10, 0,
+            70,
+            20,
+            self.color_schemes.get(MazeColors.BACKGROUND)
+        )
+        self.texts.update_text(
+            'fps_counter',
+            f"FPS: {fps:.0f}"
+        )
+
+    def render_background(self) -> None:
+        print("Rendering background...")
+        image: Image = self.background_image
+
+        if not image.need_update:
+            return
+        image.draw_rectangle(
+            0, 0,
+            image.width,
+            image.height,
+            self.color_schemes.get(MazeColors.BACKGROUND)
+        )
+        pass
 
     def render_panel(self) -> None:
         print("Rendering panel...")
@@ -187,6 +245,7 @@ class MazeDisplay:
         )
 
         self.buttons.add_button(
+            'regenerate_maze',
             Button(
                 "Regenerate Maze",
                 10, 10,
@@ -198,6 +257,7 @@ class MazeDisplay:
         )
 
         self.buttons.add_button(
+            'change_color_scheme',
             Button(
                 "Change Color Scheme",
                 10, 80,
@@ -209,6 +269,7 @@ class MazeDisplay:
         )
 
         self.buttons.add_button(
+            'toggle_pathfinding',
             Button(
                 "Toggle Pathfinding",
                 10, 150,
@@ -220,6 +281,7 @@ class MazeDisplay:
         )
 
         self.buttons.add_button(
+            'exit',
             Button(
                 "Exit",
                 10, 220,
@@ -231,6 +293,7 @@ class MazeDisplay:
         )
 
         self.buttons.add_color_selector(
+            'custom_logo_color',
             ColorSelector(
                 "Logo Color",
                 10, 310,
@@ -240,7 +303,15 @@ class MazeDisplay:
             )
         )
 
-        # image.draw_color_selector(10, 290, 100)
+        self.texts.create_text(
+            'fps_counter',
+            10,
+            0,
+            0xFFFFFFFF,
+            "FPS: 0"
+        )
+
+        # image.draw_color_selector(10, 310, 100)
         pass
 
     def render_maze(self) -> None:
@@ -350,6 +421,7 @@ class MazeDisplay:
     def change_color_scheme(self) -> None:
         self.color_schemes.next_scheme()
         self.maze_image.need_update = True
+        self.background_image.need_update = True
 
     def toggle_setting(self, setting: Settings) -> None:
         self.settings.toggle(setting)
@@ -415,12 +487,12 @@ class MazeDisplay:
             color
         )
 
-    def mouse_hook(self, btn: int, x: int, y: int, _):
+    def mouse_hook(self, btn: int, x: int, y: int, _) -> int:
         print("Window clicked.")
         self.buttons.on_click(x - self.WIDTH_MAZE, y)
         return 0
 
-    def key_hook(self, keycode: int, _):
+    def key_hook(self, keycode: int, _) -> int:
         match keycode:
             case 65307:  # ESC key
                 print("Escape key pressed. Exiting...")
