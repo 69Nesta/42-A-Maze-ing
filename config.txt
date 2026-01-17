@@ -5,4 +5,4 @@ ENTRY=0,0
 # Hello Worlds
 EXIT=19,12
 OUTPUT_FILE=maze.txt
-PERFECT=true
+PERFECT=0

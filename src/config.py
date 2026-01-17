@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Generic, TypeVar, Type, cast
 from src.errors import (
     ConfigFormatError,
@@ -6,32 +7,49 @@ from src.errors import (
     )
 
 t_coords = tuple[int, int]
+T = TypeVar('T', int, str, tuple, bool, float)
 
-T = TypeVar('T', int, str, t_coords, bool)
+
+class EConfig(Enum):
+    WIDTH = 'width'
+    HEIGHT = 'height'
+    ENTRY = 'entry'
+    EXIT = 'exit'
+    OUTPUT_FILE = 'output_file'
+    PERFECT = 'perfect'
 
 
 class ConfigValue(Generic[T]):
-    def __init__(self, key: str, value_type: Type[T], required: bool = True) -> None:
-        self.key: str = key
+    def __init__(
+                self,
+                key: EConfig,
+                value_type: Type[T],
+                required: bool = True
+            ) -> None:
+        self.key: EConfig = key
         self.value_type: Type[T] = value_type
         self.required: bool = required
         self.value: T | None = None
 
     def parse(self, raw_value: str, line: int) -> None:
+        key = str(self.key.value)
         if self.value_type is int:
-            self.value = cast(T, self.parse_int(raw_value, self.key, line))
+            self.value = cast(T, self.parse_int(raw_value, key, line))
         elif self.value_type is str:
-            self.value = cast(T, self.parse_string(raw_value, self.key, line))
-        elif self.value_type is t_coords:
-            self.value = cast(T, self.parse_coords(raw_value, self.key, line))
+            self.value = cast(T, self.parse_string(raw_value, key, line))
+        elif self.value_type is tuple:
+            self.value = cast(T, self.parse_coords(raw_value, key, line))
         elif self.value_type is bool:
-            self.value = cast(T, self.parse_bool(raw_value, self.key, line))
+            self.value = cast(T, self.parse_bool(raw_value, key, line))
+        elif self.value_type is float:
+            self.value = cast(T, self.parse_float(raw_value, key, line))
         else:
-            raise ConfigValueError(self.key, raw_value, line)
+            raise ConfigValueError(key, raw_value, line)
 
     def get_value(self) -> T:
+        key = str(self.key.value)
         if self.value is None:
-            raise ValueError(f'Value for key "{self.key}" has not been parsed yet.')
+            raise ValueError(f'Value for key "{key}" has not been parsed yet.')
         return self.value
 
     @staticmethod
@@ -70,11 +88,18 @@ class ConfigValue(Generic[T]):
         else:
             raise ConfigValueError(key, value, line)
 
+    @staticmethod
+    def parse_float(value: str, key: str, line: int = -1) -> float:
+        try:
+            return float(value)
+        except ValueError:
+            raise ConfigValueError(key, value, line)
+
 
 class ConfigParser:
     def __init__(self, filename: str) -> None:
         self.raw_data: dict[str, tuple[str, int]] = {}
-        # self.registered_values = []
+        self.registered_values: dict[EConfig, ConfigValue] = {}
         try:
             with open(filename, 'r') as f:
                 line_number = 0
@@ -88,50 +113,39 @@ class ConfigParser:
                         raise ConfigFormatError(line_number=line_number)
 
                     [key, value] = config_line
-                    self.raw_data[key] = (value, line_number)
-
-                    # match key.strip().lower():
-                    #     case 'width':
-                    #         self.width = self.parse_int(value, 'WIDTH', idx)
-                    #     case 'height':
-                    #         self.height = self.parse_int(value, 'HEIGHT', idx)
-                    #     case 'entry':
-                    #         self.entry = self.parse_coords(value, 'ENTRY', idx)
-                    #     case 'exit':
-                    #         self.exit = self.parse_coords(value, 'EXIT', idx)
-                    #     case 'output_file':
-                    #         self.output_file = self.parse_string(
-                    #             value, 'OUTPUT_FILE', idx
-                    #         )
-                    #     case 'perfect':
-                    #         self.perfect = self.parse_bool(
-                    #             value, 'PERFECT', idx
-                    #         )
-
-            # required_attrs = [
-            #     'width',
-            #     'height',
-            #     'entry',
-            #     'exit',
-            #     'output_file',
-            #     'perfect'
-            # ]
-            # for attr in required_attrs:
-            #     if not hasattr(self, attr):
-            #         raise ConfigMissingError(missing_key=attr.upper())
+                    self.raw_data[key.lower()] = (value, line_number)
 
         except FileNotFoundError:
             print('Error: Config file not found!')
 
     def register(self, config_value: ConfigValue[T]) -> None:
-        if config_value.key in self.raw_data:
-            raw_value, line_number = self.raw_data[config_value.key]
+        key: str = config_value.key.value
+        if key in self.raw_data:
+            raw_value, line_number = self.raw_data[key]
             config_value.parse(raw_value, line_number)
+            self.registered_values[config_value.key] = config_value
         elif config_value.required:
-            raise ConfigMissingError(missing_key=config_value.key)
+            raise ConfigMissingError(key)
+
+    def get(self, key: EConfig) -> ConfigValue:
+        config_value = self.registered_values.get(key)
+        if config_value is None:
+            raise ConfigMissingError(str(key.value))
+        return config_value
 
 
 class Config:
     def __init__(self, filename: str) -> None:
         self.parser = ConfigParser(filename)
-        self.parser.register(ConfigValue[int]('width', int))
+        self.parser.register(ConfigValue[int](EConfig.WIDTH, int))
+        self.parser.register(ConfigValue[int](EConfig.HEIGHT, int))
+        self.parser.register(ConfigValue[t_coords](EConfig.ENTRY, tuple))
+        self.parser.register(ConfigValue[t_coords](EConfig.EXIT, tuple))
+        self.parser.register(ConfigValue[str](EConfig.OUTPUT_FILE, str))
+        self.parser.register(ConfigValue[bool](EConfig.PERFECT, bool))
+
+    def get(self, key: EConfig) -> ConfigValue:
+        config_value = self.parser.get(key)
+        if config_value is None:
+            raise ConfigMissingError(str(key.value))
+        return config_value

@@ -10,7 +10,7 @@ class DisplayError(Exception):
 
 class ConfigFormatError(ConfigError):
     '''Indicates a formatting error in the config file.'''
-    def __init__(self, at_key: str = '', line_number: int = None) -> None:
+    def __init__(self, at_key: str = '', line_number: int = -1) -> None:
         '''Indicates a formatting error in the config file.'''
         message = 'Config file format error'
         if at_key:
