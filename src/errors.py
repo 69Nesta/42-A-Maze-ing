@@ -37,11 +37,11 @@ class ConfigValueError(ConfigError):
     def __init__(self,
                  at_key: str,
                  invalid_value: str,
-                 line_number: int = None
+                 line_number: int = -1
                  ) -> None:
         '''Indicates an invalid value for a given key in the config file.'''
         message = f'Invalid value "{invalid_value}" for key "{at_key}".'
-        if line_number is not None:
+        if line_number != -1:
             message += f' On line {line_number}.'
         super().__init__(message)
         self.at_key = at_key
