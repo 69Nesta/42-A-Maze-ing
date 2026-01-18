@@ -2,32 +2,17 @@ from typing import Generator
 from src.direction import Direction
 from src.cell import Cell
 from src.config import Config, EConfig
-from random import shuffle
-# from time import sleep
+from src.algo_prim import Prim
+from src.algo_backtrack import Backtrack
+from src.types import t_grid, t_path, t_point
+from src.coords import Coords
 
-
-t_point = tuple[int, int]
-t_path = list[tuple[int, int, Direction]]
 
 logo = [[1, 0, 0, 0, 1, 1, 1],
         [1, 0, 0, 0, 0, 0, 1],
         [1, 1, 1, 0, 1, 1, 1],
         [0, 0, 1, 0, 1, 0, 0],
         [0, 0, 1, 0, 1, 1, 1]]
-
-
-class Coords:
-    def __init__(self, x: int, y: int):
-        self.x: int = x
-        self.y: int = y
-
-    def to_tuple(self) -> t_point:
-        return (self.x, self.y)
-
-    @classmethod
-    def from_tuple(cls, coords: t_point) -> 'Coords':
-        x, y = coords
-        return cls(x, y)
 
 
 class MazeGenerator:
@@ -38,10 +23,13 @@ class MazeGenerator:
         self.start: t_point = self.config.get_coords(EConfig.ENTRY).get_value()
         self.end: t_point = self.config.get_coords(EConfig.EXIT).get_value()
 
-        self.grid: list[list[Cell]]
+        self.grid: t_grid
         self.path: t_path
-        self.generate_order: list[Coords]
+        self.generate_order: list[Coords] = []
         self.generate_order_size: int = 0
+
+        self.algo = Prim(self.width, self.height, self.end)
+        # self.algo = Backtrack(self.width, self.height, self.end)
 
     def init_grid(self):
         self.grid = [
@@ -139,11 +127,12 @@ class MazeGenerator:
         sx, sy = self.start
         ex, ey = self.end
 
+        self.generate_order.clear()
         self.init_grid()
         self.init_path()
-        self.init_generate_order()
         self.display_logo()
-        self.create(sx, sy)
+        # self.create(sx, sy)
+        self.generate_order += self.algo.create(self.grid, sx, sy)
         self.generate_order_size = len(self.generate_order)
         self.solve(ex, ey)
 
@@ -158,50 +147,6 @@ class MazeGenerator:
 
                     self.grid[y][x].is_logo = True
                     self.generate_order.append(Coords(x, y))
-
-    def create(self, x, y):
-        stack = [(x, y)]
-
-        while stack:
-            x, y = stack[-1]
-            directions = [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]
-            shuffle(directions)
-            moved = False
-
-            for direction in directions:
-                new_x, new_y = x, y
-
-                if direction == Direction.NORTH:
-                    new_y -= 1
-                elif direction == Direction.EAST:
-                    new_x += 1
-                elif direction == Direction.SOUTH:
-                    new_y += 1
-                elif direction == Direction.WEST:
-                    new_x -= 1
-
-                if 0 <= new_x < self.width and 0 <= new_y < self.height:
-                    if self.grid[new_y][new_x].is_full() and not self.grid[new_y][new_x].is_logo:
-                        if direction == Direction.NORTH:
-                            self.grid[y][x].del_north()
-                            self.grid[new_y][new_x].del_south()
-                        elif direction == Direction.SOUTH:
-                            self.grid[y][x].del_south()
-                            self.grid[new_y][new_x].del_north()
-                        elif direction == Direction.EAST:
-                            self.grid[y][x].del_east()
-                            self.grid[new_y][new_x].del_west()
-                        elif direction == Direction.WEST:
-                            self.grid[y][x].del_west()
-                            self.grid[new_y][new_x].del_east()
-                        if (new_x, new_y) == self.end:
-                            break
-                        self.generate_order.append(Coords(new_x, new_y))
-                        stack.append((new_x, new_y))
-                        moved = True
-                        break
-            if not moved:
-                stack.pop()
 
     def solve(self, x: int, y: int) -> None:
         self.path = self.a_star_find(x, y)

@@ -7,6 +7,7 @@ class Cell:
         self.y = y
         self.is_logo = False
         self.is_visited = False
+        self.is_next = False
         self.walls = {
             Direction.NORTH: True,
             Direction.EAST: True,

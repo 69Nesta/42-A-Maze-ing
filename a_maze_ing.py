@@ -5,6 +5,7 @@ from src.errors import ConfigError
 from src.maze import MazeGenerator
 
 
+
 class AMazeIng:
     def __init__(self, config_file: str):
         self.config = Config(config_file)

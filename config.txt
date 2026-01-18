@@ -1,5 +1,5 @@
 WIDTH=300
-HEIGHT=200
+HEIGHT=20
 ENTRY=0,0
 
 # Hello Worlds
