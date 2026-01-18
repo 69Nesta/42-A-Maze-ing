@@ -179,6 +179,9 @@ class MazeDisplay:
         elapsed_time = current_time - self.last_time
         fps = 1.0 / elapsed_time if elapsed_time > 0 else 0.0
 
+        if (self.first_render):
+            self.initialize()
+
         if (self.panel.need_update):
             self.render_panel()
             self.panel.need_update = False
@@ -189,10 +192,13 @@ class MazeDisplay:
                 self.WIDTH_MAZE,
                 0
             )
+            print(f'{self.WIDTH_MAZE}x{self.HEIGHT} window initialized.')
+            print(f'{self.panel.width}x{self.panel.height} panel initialized.')
 
         if (self.background_image.need_update):
             self.render_background()
             self.background_image.need_update = False
+
         self.render_fps(fps)
         self.mlx.mlx_put_image_to_window(
             self.mlx_ptr,
@@ -264,17 +270,7 @@ class MazeDisplay:
         )
         pass
 
-    def render_panel(self) -> None:
-        print("Rendering panel...")
-        image: Image = self.panel
-
-        image.draw_rectangle(
-            0, 0,
-            image.width,
-            image.height,
-            0xFFCCCCCC
-        )
-
+    def initialize(self) -> None:
         self.buttons.add_button(
             'regenerate_maze',
             Button(
@@ -342,8 +338,22 @@ class MazeDisplay:
             "FPS: 0"
         )
 
-        # image.draw_color_selector(10, 310, 100)
-        pass
+    def render_panel(self) -> None:
+        print("Rendering panel...")
+        image: Image = self.panel
+        buttons: ButtonManager = self.buttons
+        print(f'Screen size: {self.WIDTH}x{self.HEIGHT}')
+        print(f'Panel size: {self.WIDTH_PANEL}x{self.HEIGHT}')
+        print('')
+
+        image.draw_rectangle(
+            0, 0,
+            image.width,
+            image.height,
+            0xFFCCCCCC
+        )
+        buttons.draw_buttons()
+        self.texts.need_update = True
 
     def render_maze(self, current_time: float) -> None:
         settings: MazeDisplaySettings = self.settings

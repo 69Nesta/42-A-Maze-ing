@@ -24,6 +24,13 @@ class Button:
         if self.callback is not None:
             self.callback()
 
+    def draw(self, image: Image) -> None:
+        image.draw_rectangle(
+            self.x, self.y,
+            self.width, self.height,
+            self.background
+        )
+
 
 class ColorSelector:
     def __init__(self,
@@ -49,6 +56,11 @@ class ColorSelector:
         if self.callback is not None:
             self.callback(color)
 
+    def draw(self, image: Image) -> None:
+        image.draw_color_selector(
+            self.x, self.y + self.offset_y,
+            self.size)
+
 
 class ButtonManager:
     def __init__(
@@ -63,6 +75,13 @@ class ButtonManager:
         self.offset_x = offset_x
         self.texts = text_manager
 
+    def draw_buttons(self) -> None:
+        image: Image = self.image
+        for button in self.buttons:
+            button.draw(image)
+        for selector in self.selectors:
+            selector.draw(image)
+
     def add_button(self, id: str, button: Button) -> None:
         image = self.image
         self.buttons.append(button)
@@ -72,11 +91,7 @@ class ButtonManager:
         w = len(button.label) * 10
         h = 11
 
-        image.draw_rectangle(
-            button.x, button.y,
-            button.width, button.height,
-            button.background
-        )
+        button.draw(image)
         self.texts.create_text(
             id,
             self.offset_x + x0 + (button.width - w) // 2,
@@ -86,13 +101,9 @@ class ButtonManager:
         )
 
     def add_color_selector(self, id: str, selector: ColorSelector) -> None:
-        image = self.image
-        size = selector.size
-
+        image: Image = self.image
         self.selectors.append(selector)
-        image.draw_color_selector(
-            selector.x, selector.y + selector.offset_y,
-            size)
+        selector.draw(image)
         self.texts.create_text(
             id,
             self.offset_x + selector.x,
