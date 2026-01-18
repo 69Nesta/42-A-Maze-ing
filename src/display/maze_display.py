@@ -71,8 +71,8 @@ class MazeDisplay:
             Settings.SHOW_FPS: True,
             Settings.SHOW_PATHFINDING: False,
             Settings.CUSTOM_LOGO_COLOR: False,
-            Settings.ANIMATE_MAZE_GENERATION: False,
-            Settings.ANIMATE_PATHFINDING: True,
+            Settings.ANIMATE_MAZE_GENERATION: True,
+            Settings.ANIMATE_PATHFINDING: False,
         })
 
         self.custom_logo_color: int = 0xFFFF0000
