@@ -10,6 +10,9 @@ class AMazeIng:
         self.config = Config(config_file)
         self.maze = MazeGenerator(self.config)
         self.maze.generate()
+        # with open('louis.txt', 'r') as f:
+        #     maze_data = f.read()
+        # self.maze.import_maze(maze_data)
         self.renderer = MazeDisplay(self.maze)
 
 

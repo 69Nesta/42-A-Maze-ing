@@ -7,6 +7,7 @@ from random import shuffle
 
 
 t_point = tuple[int, int]
+t_path = list[tuple[int, int, Direction]]
 
 logo = [[1, 0, 0, 0, 1, 1, 1],
         [1, 0, 0, 0, 0, 0, 1],
@@ -38,7 +39,7 @@ class MazeGenerator:
         self.end: t_point = self.config.get_coords(EConfig.EXIT).get_value()
 
         self.grid: list[list[Cell]]
-        self.path: list[Direction]
+        self.path: t_path
         self.generate_order: list[Coords]
         self.generate_order_size: int = 0
 
@@ -54,6 +55,8 @@ class MazeGenerator:
         self.generate_order = []
 
     def get_cell(self, x: int, y: int) -> Cell:
+        if x < 0 or x >= self.width or y < 0 or y >= self.height:
+            raise IndexError("Cell coordinates out of bounds")
         return self.grid[y][x]
 
     def export(self) -> str:
@@ -66,17 +69,19 @@ class MazeGenerator:
         return '\n'.join(lines)
 
     def import_maze(self, data: str):
+        self.init_grid()
         lines: list[str] = data.strip().splitlines()
         wall_data: list[str] = lines[:-3]
         sx, sy = map(int, lines[-3].split(','))
         start_coords: t_point = (sx, sy)
         ex, ey = map(int, lines[-2].split(','))
         end_coords: t_point = (ex, ey)
-        path_directions: str = lines[-1]
+        # path_directions: str = lines[-1]
 
         # Parse wall data
         for y, line in enumerate(wall_data):
             for x, char in enumerate(line):
+                print(f"Parsing cell at ({x}, {y}): {char}")
                 cell: Cell = self.get_cell(x, y)
                 bits: str
                 if char.isdigit():
@@ -91,41 +96,44 @@ class MazeGenerator:
         self.start = start_coords
         self.end = end_coords
         self.path = []
-        for direction in path_directions:
-            match direction:
-                case 'N':
-                    self.path.append(Direction.NORTH)
-                case 'E':
-                    self.path.append(Direction.EAST)
-                case 'S':
-                    self.path.append(Direction.SOUTH)
-                case 'W':
-                    self.path.append(Direction.WEST)
-                case _:
-                    break
+        self.path = self.a_star_find(ex, ey)
+        # for direction in path_directions:
+        #     match direction:
+        #         case 'N':
+        #             self.path.append(Direction.NORTH)
+        #         case 'E':
+        #             self.path.append(Direction.EAST)
+        #         case 'S':
+        #             self.path.append(Direction.SOUTH)
+        #         case 'W':
+        #             self.path.append(Direction.WEST)
+        #         case _:
+        #             break
 
     def pathfinding_next_step(
                 self
                 ) -> Generator[tuple[int, int, Direction], None, None]:
         if not self.start or not self.end or not self.path:
             return
-        x, y = self.start
-        for direction in self.path:
+        # x, y = self.start
+        for path in self.path:
+            x, y, direction = path
             match direction:
                 case Direction.NORTH:
-                    y -= 1
-                    yield (x, y, direction)
+                    yield path
                 case Direction.EAST:
-                    x += 1
-                    yield (x, y, direction)
+                    yield path
                 case Direction.SOUTH:
-                    y += 1
-                    yield (x, y, direction)
+                    yield path
                 case Direction.WEST:
-                    x -= 1
-                    yield (x, y, direction)
+                    yield path
                 case _:
                     yield (x, y, None)
+
+    def get_path_to_index(self, step: int) -> t_path:
+        if step < 0 or step >= len(self.path):
+            raise IndexError("Path step out of bounds")
+        return self.path[:step]
 
     def generate(self):
         sx, sy = self.start
@@ -209,8 +217,8 @@ class MazeGenerator:
     def solve(self, x: int, y: int) -> None:
         self.path = self.a_star_find(x, y)
 
-    def a_star_find(self, x: int, y: int) -> list[Direction]:
-        queue: list[tuple[int, int, list[Direction]]] = []
+    def a_star_find(self, x: int, y: int) -> t_path:
+        queue: list[tuple[int, int, t_path]] = []
         visited: set[tuple[int, int]] = set()
 
         queue.append((x, y, []))
@@ -232,16 +240,16 @@ class MazeGenerator:
                 new_path = path.copy()
                 if direction == Direction.NORTH:
                     new_y -= 1
-                    new_path.append(Direction.SOUTH)
+                    new_path.append((new_x, new_y, Direction.SOUTH))
                 elif direction == Direction.EAST:
                     new_x += 1
-                    new_path.append(Direction.WEST)
+                    new_path.append((new_x, new_y, Direction.WEST))
                 elif direction == Direction.SOUTH:
                     new_y += 1
-                    new_path.append(Direction.NORTH)
+                    new_path.append((new_x, new_y, Direction.NORTH))
                 elif direction == Direction.WEST:
                     new_x -= 1
-                    new_path.append(Direction.EAST)
+                    new_path.append((new_x, new_y, Direction.EAST))
 
                 queue.append((new_x, new_y, new_path))
 
