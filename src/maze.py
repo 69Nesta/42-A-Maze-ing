@@ -28,8 +28,8 @@ class MazeGenerator:
         self.generate_order: list[Coords] = []
         self.generate_order_size: int = 0
 
-        self.algo = Prim(self.width, self.height, self.end)
-        # self.algo = Backtrack(self.width, self.height, self.end)
+        # self.algo = Prim(self.width, self.height, self.end)
+        self.algo = Backtrack(self.width, self.height, self.end)
 
     def init_grid(self):
         self.grid = [

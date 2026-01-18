@@ -71,8 +71,8 @@ class MazeDisplay:
             Settings.SHOW_FPS: True,
             Settings.SHOW_PATHFINDING: False,
             Settings.CUSTOM_LOGO_COLOR: False,
-            Settings.ANIMATE_MAZE_GENERATION: True,
-            Settings.ANIMATE_PATHFINDING: False,
+            Settings.ANIMATE_MAZE_GENERATION: False,
+            Settings.ANIMATE_PATHFINDING: True,
         })
 
         self.custom_logo_color: int = 0xFFFF0000
@@ -191,6 +191,12 @@ class MazeDisplay:
                 self.panel.img,
                 self.WIDTH_MAZE,
                 0
+            )
+            self.texts.put_texts_in(
+                self.WIDTH_MAZE,
+                0,
+                self.WIDTH_PANEL,
+                self.HEIGHT
             )
             print(f'{self.WIDTH_MAZE}x{self.HEIGHT} window initialized.')
             print(f'{self.panel.width}x{self.panel.height} panel initialized.')

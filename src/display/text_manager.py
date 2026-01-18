@@ -33,6 +33,19 @@ class TextManager:
         self.need_update = True
         return text
 
+    def put_texts_in(self, x: int, y: int, w: int, h: int) -> None:
+        for text in self.texts.values():
+            if (x <= text.x <= x + w - 1 and
+                    y <= text.y <= y + h - 1):
+                self.mlx.mlx_string_put(
+                    self.mlx_ptr,
+                    self.win_ptr,
+                    text.x,
+                    text.y,
+                    text.color,
+                    text.content
+                )
+
     def put_texts(self, force: bool = False) -> None:
         for text in self.texts.values():
             if text.need_update or force:
