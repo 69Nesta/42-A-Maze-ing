@@ -10,8 +10,8 @@ from random import seed
 class AMazeIng:
     def __init__(self, config_file: str):
         self.config = ConfigParser(config_file)
-        # self.maze = MazeGenerator(self.config.width, self.config.height)
-        self.maze = MazeNewGenerator(self.config.width, self.config.height)
+        self.maze = MazeGenerator(self.config.width, self.config.height)
+        #  self.maze = MazeNewGenerator(self.config.width, self.config.height)
         self.seed = 424
         maze_data = ''
         with open(self.config.output_file, 'r') as f:

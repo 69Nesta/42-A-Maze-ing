@@ -95,45 +95,48 @@ class MazeGenerator:
                     self.grid[int(center_y) + i][int(center_x) + j].is_logo = True
 
     def create(self, x, y):
-        directions = [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]
-        shuffle(directions)
+        stack = [(x, y)]
 
-        for direction in directions:
-            new_x = x
-            new_y = y
+        while stack:
+            x, y = stack[-1]
+            directions = [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]
+            shuffle(directions)
+            moved = False
 
-            if direction == Direction.NORTH:
-                new_y -= 1
-            elif direction == Direction.EAST:
-                new_x += 1
-            elif direction == Direction.SOUTH:
-                new_y += 1
-            elif direction == Direction.WEST:
-                new_x -= 1
+            for direction in directions:
+                new_x, new_y = x, y
 
-            if 0 <= new_x < self.width and 0 <= new_y < self.height:
+                if direction == Direction.NORTH:
+                    new_y -= 1
+                elif direction == Direction.EAST:
+                    new_x += 1
+                elif direction == Direction.SOUTH:
+                    new_y += 1
+                elif direction == Direction.WEST:
+                    new_x -= 1
 
-                if self.grid[new_y][new_x].is_full() and not self.grid[new_y][new_x].is_logo:
+                if 0 <= new_x < self.width and 0 <= new_y < self.height:
+                    if self.grid[new_y][new_x].is_full() and not self.grid[new_y][new_x].is_logo:
+                        if direction == Direction.NORTH:
+                            self.grid[y][x].del_north()
+                            self.grid[new_y][new_x].del_south()
+                        elif direction == Direction.SOUTH:
+                            self.grid[y][x].del_south()
+                            self.grid[new_y][new_x].del_north()
+                        elif direction == Direction.EAST:
+                            self.grid[y][x].del_east()
+                            self.grid[new_y][new_x].del_west()
+                        elif direction == Direction.WEST:
+                            self.grid[y][x].del_west()
+                            self.grid[new_y][new_x].del_east()
+                        if (new_x, new_y) == self.end:
+                            break
+                        stack.append((new_x, new_y))
+                        moved = True
+                        break
+            if not moved:
+                stack.pop()
 
-                    if direction == Direction.NORTH:
-                        self.grid[y][x].del_north()
-                        self.grid[new_y][new_x].del_south()
-
-                    elif direction == Direction.SOUTH:
-                        self.grid[y][x].del_south()
-                        self.grid[new_y][new_x].del_north()
-
-                    elif direction == Direction.EAST:
-                        self.grid[y][x].del_east()
-                        self.grid[new_y][new_x].del_west()
-
-                    elif direction == Direction.WEST:
-                        self.grid[y][x].del_west()
-                        self.grid[new_y][new_x].del_east()
-                    if (new_x, new_y) == self.end:
-                        return
-
-                    self.create(new_x, new_y)
 
     def solve(self, x, y):
         solution = MazeGenerator.back_track_find(self, x, y)
