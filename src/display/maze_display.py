@@ -198,8 +198,6 @@ class MazeDisplay:
                 self.WIDTH_PANEL,
                 self.HEIGHT
             )
-            print(f'{self.WIDTH_MAZE}x{self.HEIGHT} window initialized.')
-            print(f'{self.panel.width}x{self.panel.height} panel initialized.')
 
         if (self.background_image.need_update):
             self.render_background()
@@ -268,22 +266,27 @@ class MazeDisplay:
 
         if not image.need_update:
             return
-        image.draw_rectangle(
-            0, 0,
-            image.width,
-            image.height,
-            self.color_schemes.get(MazeColors.BACKGROUND)
-        )
-        pass
+        image.clear(self.color_schemes.get(MazeColors.BACKGROUND))
 
     def initialize(self) -> None:
+        nb_buttons = 5
+
+        width = 350
+        height = 90
+
+        spacing = height // 4
+
+        x = self.WIDTH_PANEL // 2 - width // 2
+        y = self.HEIGHT // 2
+        y -= (nb_buttons * height + (nb_buttons - 1) * spacing)
+
         self.buttons.add_button(
             'regenerate_maze',
             Button(
                 "Regenerate Maze",
-                10, 10,
-                200, 60,
-                0xFFABDAFC,
+                x, y,
+                width, height,
+                0xFF40798C,
                 0xFFE5FCFF,
                 lambda: self.generate_new_maze()
             )
@@ -293,9 +296,9 @@ class MazeDisplay:
             'change_color_scheme',
             Button(
                 "Change Color Scheme",
-                10, 80,
-                200, 60,
-                0xFFABDAFC,
+                x, y + spacing + height,
+                width, height,
+                0xFF98D9C2,
                 0xFFE5FCFF,
                 lambda: self.change_color_scheme()
             )
@@ -305,9 +308,9 @@ class MazeDisplay:
             'toggle_pathfinding',
             Button(
                 "Toggle Pathfinding",
-                10, 150,
-                200, 60,
-                0xFFABDAFC,
+                x, y + spacing * 2 + height * 2,
+                width, height,
+                0xFFF19A3E,
                 0xFFE5FCFF,
                 lambda: self.toggle_pathfinding()
             )
@@ -317,32 +320,37 @@ class MazeDisplay:
             'exit',
             Button(
                 "Exit",
-                10, 220,
-                200, 60,
-                0xFFABDAFC,
+                x, y + spacing * 3 + height * 3,
+                width, height,
+                0xFF403233,
                 0xFFE5FCFF,
                 lambda: self.close(None)
             )
         )
 
+        s_selector = 150
+        x_selector = self.WIDTH_PANEL // 2 - s_selector // 2
+        y_selector = y + spacing * 3 + height * 3 + s_selector + 20
+
         self.buttons.add_color_selector(
             'custom_logo_color',
             ColorSelector(
                 "Logo Color",
-                10, 310,
-                100,
+                x_selector, y_selector,
+                s_selector,
                 0xFFE5FCFF,
                 lambda color: self.set_custom_logo_color(color),
             )
         )
 
-        self.texts.create_text(
-            'fps_counter',
-            10,
-            0,
-            0xFFFFFFFF,
-            "FPS: 0"
-        )
+        if (self.settings.get(Settings.SHOW_FPS)):
+            self.texts.create_text(
+                'fps_counter',
+                10,
+                0,
+                0xFFFFFFFF,
+                "FPS: 0"
+            )
 
     def render_panel(self) -> None:
         print("Rendering panel...")
@@ -356,7 +364,7 @@ class MazeDisplay:
             0, 0,
             image.width,
             image.height,
-            0xFFCCCCCC
+            self.color_schemes.get(MazeColors.BACKGROUND)
         )
         buttons.draw_buttons()
         self.texts.need_update = True
@@ -384,14 +392,8 @@ class MazeDisplay:
     def draw_maze(self) -> None:
         image: Image = self.maze_image
         maze: MazeGenerator = self.maze
-        cell_size: int = self.cell_size
 
-        image.draw_rectangle(
-            0, 0,
-            cell_size * maze.width * 2 + cell_size,
-            cell_size * maze.height * 2 + cell_size,
-            self.color_schemes.get(MazeColors.BACKGROUND)
-        )
+        image.clear(self.color_schemes.get(MazeColors.BACKGROUND))
 
         logo_color: int = self.color_schemes.get(MazeColors.LOGO)
         if self.settings.get(Settings.CUSTOM_LOGO_COLOR):
@@ -642,6 +644,7 @@ class MazeDisplay:
         if (self.settings.get(Settings.SHOW_PATHFINDING)
            and self.settings.get(Settings.ANIMATE_PATHFINDING)):
             self.draw_pathfinding()
+        self.panel.need_update = True
         self.maze_image.need_update = True
         self.background_image.need_update = True
 

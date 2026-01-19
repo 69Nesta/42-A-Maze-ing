@@ -22,6 +22,9 @@ class Image:
         bpp = self.bits_per_pixel // 8
         offset = y * self.size_line + x * bpp
 
+        if offset < 0 or offset + bpp > len(self.addr):
+            raise IndexError("Pixel coordinates out of bounds")
+
         self.addr[offset:offset + bpp] = \
             color.to_bytes(bpp, 'little')
 
