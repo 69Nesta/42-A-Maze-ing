@@ -194,12 +194,13 @@ class MazeDisplay:
                 self.WIDTH_MAZE,
                 0
             )
-            self.texts.put_texts_in(
-                self.WIDTH_MAZE,
-                0,
-                self.WIDTH_PANEL,
-                self.HEIGHT
-            )
+            if not self.first_render:
+                self.texts.put_texts_in(
+                    self.WIDTH_MAZE,
+                    0,
+                    self.WIDTH_PANEL,
+                    self.HEIGHT
+                )
 
         if (self.background_image.need_update):
             self.render_background()
@@ -307,7 +308,7 @@ class MazeDisplay:
                 x_selector, current_total_height,
                 [
                     SelectorButton(
-                        'Recursive Backtracker',
+                        'Backtracker',
                         x_selector, current_total_height + 20,
                         selector_btn_width, selector_btn_height,
                         0xFF564E58,
@@ -317,7 +318,7 @@ class MazeDisplay:
                         lambda _: print('Selected Recursive Backtracker')
                     ),
                     SelectorButton(
-                        'Prim\'s Algorithm',
+                        'Prim',
                         x_selector + selector_btn_width + selector_gap_w,
                         current_total_height + 20,
                         selector_btn_width, selector_btn_height,
