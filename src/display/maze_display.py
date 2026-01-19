@@ -2,7 +2,9 @@ import time
 from mlx import Mlx
 from enum import Enum
 from src.display.image import Image
-from src.display.buttons import ButtonManager, Button, ColorSelector, Selector, SelectorButton, SelectorButton
+from src.display.buttons import (
+    ButtonManager, Button, ColorSelector, Selector, SelectorButton
+)
 from src.maze import MazeGenerator
 from src.direction import Direction
 from src.errors import (DisplayMazeToBig)
