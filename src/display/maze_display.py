@@ -271,102 +271,59 @@ class MazeDisplay:
         image.clear(self.color_schemes.get(MazeColors.BACKGROUND))
 
     def initialize(self) -> None:
-        nb_buttons = 5
+        nb_elements = 6
+        nb_buttons = 4
 
-        width = 350
-        height = 90
+        button_width = 350
+        button_height = 90
 
-        spacing = height // 4
+        color_selector_size = 150
+        algo_selector_height = 50 + 20 + 20
 
-        x = self.WIDTH_PANEL // 2 - width // 2
-        y = self.HEIGHT // 2
-        y -= (nb_buttons * height + (nb_buttons - 1) * spacing)
+        total_height = 0
+        total_height += algo_selector_height
+        total_height += button_height * nb_buttons
+        total_height += color_selector_size
 
-        self.buttons.add_button(
-            'regenerate_maze',
-            Button(
-                "Regenerate Maze",
-                x, y,
-                width, height,
-                0xFF40798C,
-                0xFFE5FCFF,
-                lambda: self.generate_new_maze()
-            )
-        )
+        spaceing_h = 30
 
-        self.buttons.add_button(
-            'change_color_scheme',
-            Button(
-                "Change Color Scheme",
-                x, y + spacing + height,
-                width, height,
-                0xFF98D9C2,
-                0xFFE5FCFF,
-                lambda: self.change_color_scheme()
-            )
-        )
+        total_height_spaceing = spaceing_h * nb_elements + total_height
 
-        self.buttons.add_button(
-            'toggle_pathfinding',
-            Button(
-                "Toggle Pathfinding",
-                x, y + spacing * 2 + height * 2,
-                width, height,
-                0xFFF19A3E,
-                0xFFE5FCFF,
-                lambda: self.toggle_pathfinding()
-            )
-        )
+        selector_gap_w = 10
+        selector_btn_width = (self.WIDTH_PANEL - 100) // 2 - selector_gap_w
+        selector_btn_height = 50
+        x_selector = self.WIDTH_PANEL // 2 - (
+            (selector_btn_width * 2 + selector_gap_w) // 2
+        ) - 10
 
-        self.buttons.add_button(
-            'exit',
-            Button(
-                "Exit",
-                x, y + spacing * 3 + height * 3,
-                width, height,
-                0xFF403233,
-                0xFFE5FCFF,
-                lambda: self.close(None)
-            )
-        )
-
-        s_selector = 150
-        x_selector = self.WIDTH_PANEL // 2 - s_selector // 2
-        y_selector = y + spacing * 3 + height * 3 + s_selector + 20
-
-        self.buttons.add_color_selector(
-            'custom_logo_color',
-            ColorSelector(
-                "Logo Color",
-                x_selector, y_selector,
-                s_selector,
-                0xFFE5FCFF,
-                lambda color: self.set_custom_logo_color(color),
-            )
-        )
-
+        current_total_height = (self.HEIGHT // 2)
+        current_total_height -= total_height_spaceing // 2
+        current_total_height += 20
         self.buttons.add_selector(
             'maze_algorithm',
             Selector(
                 self.panel,
                 'Maze Algorithm',
-                10, 30,
+                x_selector, current_total_height,
                 [
                     SelectorButton(
                         'Recursive Backtracker',
-                        0, 50,
-                        300, 50,
-                        0xFF40798C,
-                        0xFF6597A8,
+                        x_selector, current_total_height + 20,
+                        selector_btn_width, selector_btn_height,
+                        0xFF564E58,
+                        0xFF252627,
+                        0xFFF2EFE9,
                         0xFFE5FCFF,
                         lambda _: print('Selected Recursive Backtracker')
                     ),
                     SelectorButton(
                         'Prim\'s Algorithm',
-                        305, 50,
-                        300, 50,
-                        0xFF40798C,
-                        0xFF6597A8,
+                        x_selector + selector_btn_width + selector_gap_w,
+                        current_total_height + 20,
+                        selector_btn_width, selector_btn_height,
+                        0xFF564E58,
+                        0xFF252627,
+                        0xFFF2EFE9,
                         0xFFE5FCFF,
                         lambda _: print('Selected Prim\'s Algorithm')
                     )
@@ -374,6 +331,72 @@ class MazeDisplay:
                 0,
                 0xFFE5FCFF,
                 lambda _: print('Selected new maze algorithm')
+            )
+        )
+        current_total_height += algo_selector_height + spaceing_h
+
+        button_x = self.WIDTH_PANEL // 2 - button_width // 2
+        self.buttons.add_button(
+            'regenerate_maze',
+            Button(
+                "Regenerate Maze",
+                button_x, current_total_height,
+                button_width, button_height,
+                0xFF40798C,
+                0xFFE5FCFF,
+                lambda: self.generate_new_maze()
+            )
+        )
+        current_total_height += button_height + spaceing_h
+
+        self.buttons.add_button(
+            'change_color_scheme',
+            Button(
+                "Change Color Scheme",
+                button_x, current_total_height,
+                button_width, button_height,
+                0xFF98D9C2,
+                0xFFE5FCFF,
+                lambda: self.change_color_scheme()
+            )
+        )
+        current_total_height += button_height + spaceing_h
+
+        self.buttons.add_button(
+            'toggle_pathfinding',
+            Button(
+                "Toggle Pathfinding",
+                button_x, current_total_height,
+                button_width, button_height,
+                0xFFF19A3E,
+                0xFFE5FCFF,
+                lambda: self.toggle_pathfinding()
+            )
+        )
+        current_total_height += button_height + spaceing_h
+
+        self.buttons.add_button(
+            'exit',
+            Button(
+                "Exit",
+                button_x, current_total_height,
+                button_width, button_height,
+                0xFF403233,
+                0xFFE5FCFF,
+                lambda: self.close(None)
+            )
+        )
+        current_total_height += button_height + spaceing_h
+
+        x_color = self.WIDTH_PANEL // 2 - color_selector_size // 2
+        self.buttons.add_color_selector(
+            'custom_logo_color',
+            ColorSelector(
+                "Logo Color",
+                x_color, current_total_height,
+                color_selector_size,
+                0xFFE5FCFF,
+                lambda color: self.set_custom_logo_color(color),
             )
         )
 
@@ -747,7 +770,6 @@ class MazeDisplay:
         )
 
     def mouse_hook(self, btn: int, x: int, y: int, _) -> int:
-        print("Window clicked.")
         self.buttons.on_click(x - self.WIDTH_MAZE, y)
         return 0
 

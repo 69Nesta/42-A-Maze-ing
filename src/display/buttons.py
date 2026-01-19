@@ -70,6 +70,7 @@ class SelectorButton:
                 width: int, height: int,
                 background: int,
                 selected_background: int,
+                border_color: int,
                 text_color: int,
                 callback: Callable | None = None
             ) -> None:
@@ -80,6 +81,7 @@ class SelectorButton:
         self.height: int = height
         self.background: int = background
         self.selected_background: int = selected_background
+        self.border_color: int = border_color
         self.text_color: int = text_color
         self.callback: Callable | None = callback
 
@@ -92,7 +94,7 @@ class SelectorButton:
         image.draw_rectangle(
             self.x, self.y,
             self.width, self.height,
-            self.background
+            self.background if not selected else self.border_color
         )
         if selected:
             image.draw_rectangle(
