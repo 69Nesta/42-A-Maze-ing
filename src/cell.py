@@ -8,6 +8,7 @@ class Cell:
         self.is_logo = False
         self.is_visited = False
         self.is_next = False
+        self.is_undo_perfect = False
         self.walls = {
             Direction.NORTH: True,
             Direction.EAST: True,
