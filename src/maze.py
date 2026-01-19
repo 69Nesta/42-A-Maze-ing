@@ -6,6 +6,8 @@ from src.algo_prim import Prim
 from src.algo_backtrack import Backtrack
 from src.types import t_grid, t_path, t_point
 from src.coords import Coords
+from random import randint
+from src.direction import Direction
 
 
 logo = [[1, 0, 0, 0, 1, 1, 1],
@@ -133,6 +135,7 @@ class MazeGenerator:
         self.display_logo()
         # self.create(sx, sy)
         self.generate_order += self.algo.create(self.grid, sx, sy)
+        self.generate_order += self.undo_perfect(self.grid, sx, sy, ex, ey)
         self.generate_order_size = len(self.generate_order)
         self.solve(ex, ey)
 
@@ -188,3 +191,49 @@ class MazeGenerator:
                 queue.append((new_x, new_y, new_path))
 
         return []
+
+    def undo_perfect(self, grid: t_grid, sx: int, sy: int, ex: int, ey: int) -> list[Coords]:
+        generate_order: list[Coords] = []
+        for i in range(10):
+            y = randint(1, self.height-1)
+            x = randint(1, self.width-1)
+            directions = []
+            generate_order.append(Coords(x, y))
+            for wall in grid[y][x].walls:
+                if grid[y][x].walls[wall] is True:
+                    directions.append(wall)
+            if len(directions) == 0:
+                continue
+            direction = directions[randint(0, len(directions) - 1)]
+            print(grid[y][x].walls)
+            print(direction)
+            new_x, new_y = x, y
+            if direction == Direction.NORTH:
+                new_y -= 1
+            elif direction == Direction.EAST:
+                new_x += 1
+            elif direction == Direction.SOUTH:
+                new_y += 1
+            elif direction == Direction.WEST:
+                new_x -= 1
+            print(grid[new_y][new_x].walls)
+
+            if 0 <= new_x < self.width and 0 <= new_y < self.height:
+                if not grid[new_y][new_x].is_logo:
+                    generate_order.append(Coords(new_x, new_y))
+                    if direction == Direction.NORTH:
+                        grid[y][x].del_north()
+                        grid[new_y][new_x].del_south()
+                    elif direction == Direction.SOUTH:
+                        grid[y][x].del_south()
+                        grid[new_y][new_x].del_north()
+                    elif direction == Direction.EAST:
+                        grid[y][x].del_east()
+                        grid[new_y][new_x].del_west()
+                    elif direction == Direction.WEST:
+                        grid[y][x].del_west()
+                        grid[new_y][new_x].del_east()
+                    print(grid[y][x].walls)
+                    print(grid[new_y][new_x].walls)
+        print(generate_order)
+        return generate_order

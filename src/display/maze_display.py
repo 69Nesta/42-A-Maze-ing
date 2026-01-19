@@ -72,7 +72,7 @@ class MazeDisplay:
             Settings.SHOW_PATHFINDING: False,
             Settings.CUSTOM_LOGO_COLOR: False,
             Settings.ANIMATE_MAZE_GENERATION: True,
-            Settings.ANIMATE_PATHFINDING: False,
+            Settings.ANIMATE_PATHFINDING: True,
         })
 
         self.custom_logo_color: int = 0xFFFF0000
@@ -329,7 +329,7 @@ class MazeDisplay:
         pass
 
     def render_maze(self, current_time: float) -> None:
-        print("Rendering maze...")
+        # print("Rendering maze...")
         settings: MazeDisplaySettings = self.settings
         # self.draw_maze()
         if (settings.get(Settings.ANIMATE_MAZE_GENERATION) and
