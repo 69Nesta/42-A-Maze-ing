@@ -6,6 +6,9 @@ from src.algo_prim import Prim
 from src.algo_backtrack import Backtrack
 from src.types import t_grid, t_path, t_point
 from src.coords import Coords
+from random import randint
+from src.direction import Direction
+from random import seed
 
 
 logo = [[1, 0, 0, 0, 1, 1, 1],
@@ -127,12 +130,16 @@ class MazeGenerator:
         sx, sy = self.start
         ex, ey = self.end
 
+        self.seed = 424
+        seed(self.seed)
         self.generate_order.clear()
         self.init_grid()
         self.init_path()
         self.display_logo()
+
         # self.create(sx, sy)
         self.generate_order += self.algo.create(self.grid, sx, sy)
+        self.undo_perfect(self.grid)
         self.generate_order_size = len(self.generate_order)
         self.solve(ex, ey)
 
@@ -188,3 +195,55 @@ class MazeGenerator:
                 queue.append((new_x, new_y, new_path))
 
         return []
+
+    def undo_perfect(self, grid: t_grid):
+        available = []
+        for row in self.grid:
+            for cell in row:
+
+                nb_wall = 0
+                for wall in cell.walls:
+                    if cell.walls[wall] is True:
+                        nb_wall += 1
+                if nb_wall == 3 and cell.x >= 1 and cell.x < self.width - 1 and cell.y >= 1 and cell.y < self.height - 1 :
+                    available.append(cell)
+        available_iteration = int(len(available) * 0.3)
+        for i in range(available_iteration):
+            current_cell = available.pop(randint(0, len(available) - 1))
+            for wall in current_cell.walls:
+                if current_cell.walls[wall] is False:
+                    direction = wall
+            new_x, new_y = current_cell.x, current_cell.y
+            if direction == Direction.NORTH:
+                direction = Direction.SOUTH
+                new_y += 1
+
+            elif direction == Direction.SOUTH:
+                direction = Direction.NORTH
+                new_y -= 1
+
+            elif direction == Direction.EAST:
+                direction = Direction.WEST
+                new_x -= 1
+
+            elif direction == Direction.WEST:
+                direction = Direction.EAST
+                new_x += 1
+
+            if (not grid[new_y][new_x].is_logo
+               and not current_cell.is_undo_perfect
+               and not grid[new_y][new_x].is_undo_perfect):
+                current_cell.is_undo_perfect = True
+                grid[new_y][new_x].is_undo_perfect = True
+                if direction == Direction.NORTH:
+                    current_cell.del_north()
+                    grid[new_y][new_x].del_south()
+                elif direction == Direction.SOUTH:
+                    current_cell.del_south()
+                    grid[new_y][new_x].del_north()
+                elif direction == Direction.EAST:
+                    current_cell.del_east()
+                    grid[new_y][new_x].del_west()
+                elif direction == Direction.WEST:
+                    current_cell.del_west()
+                    grid[new_y][new_x].del_east()
