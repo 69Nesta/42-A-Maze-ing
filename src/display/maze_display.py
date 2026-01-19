@@ -518,55 +518,72 @@ class MazeDisplay:
                 wall_color, logo_color
             )
 
-    def draw_pathfinding(self) -> None:
+    def draw_pathfinding_cell(
+                self,
+                x: int,
+                y: int,
+                direction: Direction
+            ) -> None:
         image: Image = self.path_image
-        maze: MazeGenerator = self.maze
+        cellsize: int = self.cell_size
+        x0, y0, x1, y1, _, _ = self.get_cell_pos(x, y)
 
         color: int = self.color_schemes.get(MazeColors.PATH)
+
+        match direction:
+            case Direction.NORTH:
+                image.draw_rectangle(
+                    x1, y0,
+                    cellsize, cellsize * 2,
+                    color
+                )
+            case Direction.EAST:
+                image.draw_rectangle(
+                    x1, y1,
+                    cellsize * 2, cellsize,
+                    color
+                )
+            case Direction.SOUTH:
+                image.draw_rectangle(
+                    x1, y1,
+                    cellsize, cellsize * 2,
+                    color
+                )
+            case Direction.WEST:
+                image.draw_rectangle(
+                    x0, y1,
+                    cellsize * 2, cellsize,
+                    color
+                )
+
+        if (x, y) == self.maze.start:
+            image.draw_rectangle(
+                x1, y1,
+                cellsize, cellsize,
+                self.color_schemes.get(MazeColors.START)
+            )
+
+        if (x, y) == self.maze.end:
+            image.draw_rectangle(
+                x1, y1,
+                cellsize, cellsize,
+                self.color_schemes.get(MazeColors.END)
+            )
+
+    def draw_pathfinding(self) -> None:
+        maze: MazeGenerator = self.maze
 
         for idx, step in enumerate(maze.path):
             if (self.path_animation.started
                and idx >= self.path_animation.index):
                 break
             x, y, direction = step
-            x0, y0, x1, y1, _, _ = self.get_cell_pos(x, y)
-
-            match direction:
-                case Direction.NORTH:
-                    image.draw_rectangle(
-                        x1, y0,
-                        self.cell_size, self.cell_size * 2,
-                        color
-                    )
-                case Direction.EAST:
-                    image.draw_rectangle(
-                        x1, y1,
-                        self.cell_size * 2, self.cell_size,
-                        color
-                    )
-                case Direction.SOUTH:
-                    image.draw_rectangle(
-                        x1, y1,
-                        self.cell_size, self.cell_size * 2,
-                        color
-                    )
-                case Direction.WEST:
-                    image.draw_rectangle(
-                        x0, y1,
-                        self.cell_size * 2, self.cell_size,
-                        color
-                    )
-                case _:
-                    break
+            self.draw_pathfinding_cell(x, y, direction)
         self.draw_start_end()
 
     def draw_pathfinding_animate(self, current_time: float) -> None:
-        image: Image = self.path_image
-        cell_size: int = self.cell_size
         maze: MazeGenerator = self.maze
         animation: AnimationState = self.path_animation
-
-        color: int = self.color_schemes.get(MazeColors.PATH)
 
         if not animation.started and not animation.finished:
             animation.start(current_time)
@@ -577,38 +594,7 @@ class MazeDisplay:
                 self.draw_pathfinding()
                 return
             x, y, direction = maze.path[step_index]
-            x0, y0, x1, y1, _, _ = self.get_cell_pos(x, y)
-            match direction:
-                case Direction.NORTH:
-                    image.draw_rectangle(
-                        x1, y0,
-                        cell_size, cell_size * 2,
-                        color
-                    )
-                case Direction.EAST:
-                    image.draw_rectangle(
-                        x1, y1,
-                        cell_size * 2, cell_size,
-                        color
-                    )
-                case Direction.SOUTH:
-                    image.draw_rectangle(
-                        x1, y1,
-                        cell_size, cell_size * 2,
-                        color
-                    )
-                case Direction.WEST:
-                    image.draw_rectangle(
-                        x0, y1,
-                        cell_size * 2, cell_size,
-                        color
-                    )
-            if (x, y) == maze.start:
-                image.draw_rectangle(
-                    x1, y1,
-                    cell_size, cell_size,
-                    self.color_schemes.get(MazeColors.START)
-                )
+            self.draw_pathfinding_cell(x, y, direction)
 
         if not animation.finished:
             self.path_image.need_update = True

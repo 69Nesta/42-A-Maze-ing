@@ -139,6 +139,8 @@ class Selector:
     def on_click(self, x: int, y: int) -> None:
         for i, button in enumerate(self.choice):
             if button.collide(x, y):
+                if (i == self.current_index):
+                    return
                 self.current_index = i
                 button.execute(i)
                 self.execute(i)
