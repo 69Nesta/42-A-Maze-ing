@@ -25,6 +25,9 @@ class MazeGenerator:
         self.height: int = self.config.get_int(EConfig.HEIGHT).get_value()
         self.start: t_point = self.config.get_coords(EConfig.ENTRY).get_value()
         self.end: t_point = self.config.get_coords(EConfig.EXIT).get_value()
+        self.seed: int = self.config.get_int(EConfig.MAZE_SEED).get_value()
+        if self.seed != 0:
+            seed(self.seed)
 
         self.grid: t_grid
         self.path: t_path
@@ -130,8 +133,8 @@ class MazeGenerator:
         sx, sy = self.start
         ex, ey = self.end
 
-        self.seed = 424
         seed(self.seed)
+
         self.generate_order.clear()
         self.init_grid()
         self.init_path()

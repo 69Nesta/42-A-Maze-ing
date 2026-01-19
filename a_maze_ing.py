@@ -1,6 +1,6 @@
 import sys
 from src.display.maze_display import MazeDisplay
-from src.config import Config
+from src.config import Config, EConfig
 from src.errors import ConfigError
 from src.maze import MazeGenerator
 
@@ -14,7 +14,7 @@ class AMazeIng:
         # with open('louis.txt', 'r') as f:
         #     maze_data = f.read()
         # self.maze.import_maze(maze_data)
-        self.renderer = MazeDisplay(self.maze)
+        self.renderer = MazeDisplay(self.maze, self.config)
 
 
 if __name__ == '__main__':

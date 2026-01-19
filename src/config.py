@@ -1,10 +1,10 @@
 from enum import Enum
-from typing import Generic, TypeVar, Type, cast
+from typing import Generic, TypeVar, cast
 from src.errors import (
     ConfigFormatError,
     ConfigMissingError,
     ConfigValueError
-    )
+)
 
 t_coords = tuple[int, int]
 T = TypeVar('T', int, str, tuple, bool, float)
@@ -17,19 +17,25 @@ class EConfig(Enum):
     EXIT = 'exit'
     OUTPUT_FILE = 'output_file'
     PERFECT = 'perfect'
+    MAZE_SEED = 'maze_seed'
+    ANIMATE_MAZE_GENERATION = 'animate_maze_generation'
+    MAZE_GENERATION_SPEED = 'maze_generation_speed'
+    ANIMATE_MAZE_SOLVING = 'animate_maze_solving'
+    MAZE_SOLVING_SPEED = 'maze_solving_speed'
 
 
 class ConfigValue(Generic[T]):
     def __init__(
                 self,
                 key: EConfig,
-                value_type: Type[T],
+                value_type: type,
+                default: T | None = None,
                 required: bool = True
             ) -> None:
         self.key: EConfig = key
-        self.value_type: Type[T] = value_type
+        self.value_type: type = value_type
         self.required: bool = required
-        self.value: T | None = None
+        self.value: T | None = default
 
     def parse(self, raw_value: str, line: int) -> None:
         key = str(self.key.value)
@@ -37,8 +43,13 @@ class ConfigValue(Generic[T]):
             self.value = cast(T, self.parse_int(raw_value, key, line))
         elif self.value_type is str:
             self.value = cast(T, self.parse_string(raw_value, key, line))
-        elif self.value_type is tuple:
-            self.value = cast(T, self.parse_coords(raw_value, key, line))
+        elif type(self.value_type) is tuple:
+            self.value = cast(T, self.parse_tuple(
+                raw_value,
+                self.value_type,
+                key,
+                line
+            ))
         elif self.value_type is bool:
             self.value = cast(T, self.parse_bool(raw_value, key, line))
         elif self.value_type is float:
@@ -67,14 +78,32 @@ class ConfigValue(Generic[T]):
         return value
 
     @staticmethod
-    def parse_coords(value: str, key: str, line: int = -1) -> tuple[int, int]:
+    def parse_tuple(
+            value: str,
+            types_tuple: tuple,
+            key: str,
+            line: int = -1) -> tuple:
         try:
-            coords = value.split(',')
-            if len(coords) != 2:
+            values = value.split(',')
+            if len(values) != len(types_tuple):
                 raise ConfigValueError(key, value, line)
-            x = int(coords[0].strip())
-            y = int(coords[1].strip())
-            return (x, y)
+            parsed_values = []
+            for i in range(len(values)):
+                val = values[i].strip()
+                typ = types_tuple[i]
+                if typ is int:
+                    parsed_values.append(int(val))
+                elif typ is float:
+                    parsed_values.append(float(val))
+                elif typ is str:
+                    parsed_values.append(val)
+                elif typ is bool:
+                    parsed_values.append(
+                        ConfigValue.parse_bool(val, key, line)
+                    )
+                else:
+                    raise ConfigValueError(key, value, line)
+            return tuple(parsed_values)
         except ValueError:
             raise ConfigValueError(key, value, line)
 
@@ -113,7 +142,7 @@ class ConfigParser:
                         raise ConfigFormatError(line_number=line_number)
 
                     [key, value] = config_line
-                    self.raw_data[key.lower()] = (value, line_number)
+                    self.raw_data[key.lower().strip()] = (value, line_number)
 
         except FileNotFoundError:
             print('Error: Config file not found!')
@@ -124,7 +153,7 @@ class ConfigParser:
             raw_value, line_number = self.raw_data[key]
             config_value.parse(raw_value, line_number)
             self.registered_values[config_value.key] = config_value
-        elif config_value.required:
+        elif config_value.required and config_value.value is None:
             raise ConfigMissingError(key)
 
     def get(self, key: EConfig) -> ConfigValue:
@@ -136,13 +165,29 @@ class ConfigParser:
 
 class Config:
     def __init__(self, filename: str) -> None:
-        self.parser = ConfigParser(filename)
-        self.parser.register(ConfigValue[int](EConfig.WIDTH, int))
-        self.parser.register(ConfigValue[int](EConfig.HEIGHT, int))
-        self.parser.register(ConfigValue[t_coords](EConfig.ENTRY, tuple))
-        self.parser.register(ConfigValue[t_coords](EConfig.EXIT, tuple))
-        self.parser.register(ConfigValue[str](EConfig.OUTPUT_FILE, str))
-        self.parser.register(ConfigValue[bool](EConfig.PERFECT, bool))
+        parser = ConfigParser(filename)
+        self.parser = parser
+        parser.register(ConfigValue[int](EConfig.WIDTH, int))
+        parser.register(ConfigValue[int](EConfig.HEIGHT, int))
+        parser.register(ConfigValue[tuple](EConfig.ENTRY, (int, int)))
+        parser.register(ConfigValue[tuple](EConfig.EXIT, (int, int)))
+        parser.register(ConfigValue[str](EConfig.OUTPUT_FILE, str))
+        parser.register(ConfigValue[bool](EConfig.PERFECT, bool))
+        parser.register(ConfigValue[int](
+            EConfig.MAZE_SEED, int, 0, False
+        ))
+        parser.register(ConfigValue[bool](
+            EConfig.ANIMATE_MAZE_GENERATION, bool
+        ))
+        parser.register(ConfigValue[float](
+            EConfig.MAZE_GENERATION_SPEED, float, 1.0, False
+        ))
+        parser.register(ConfigValue[bool](
+            EConfig.ANIMATE_MAZE_SOLVING, bool
+        ))
+        parser.register(ConfigValue[float](
+            EConfig.MAZE_SOLVING_SPEED, float, 1.0, False
+        ))
 
     def get(self, key: EConfig) -> ConfigValue:
         config_value = self.parser.get(key)
@@ -155,6 +200,9 @@ class Config:
         return cast(ConfigValue[str], self.parser.get(key))
 
     def get_coords(self, key: EConfig) -> ConfigValue[tuple]:
+        return cast(ConfigValue[tuple], self.parser.get(key))
+
+    def get_tuple(self, key: EConfig) -> ConfigValue[tuple]:
         return cast(ConfigValue[tuple], self.parser.get(key))
 
     def get_bool(self, key: EConfig) -> ConfigValue[bool]:

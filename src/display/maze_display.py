@@ -1,6 +1,7 @@
 import time
 from mlx import Mlx
 from enum import Enum
+from src.config import Config, EConfig
 from src.display.image import Image
 from src.display.buttons import (
     ButtonManager, Button, ColorSelector, Selector, SelectorButton
@@ -47,7 +48,8 @@ class MazeDisplay:
     WIDTH_MAZE: int
     WIDTH_PANEL: int
 
-    def __init__(self, maze: MazeGenerator) -> None:
+    def __init__(self, maze: MazeGenerator, config: Config) -> None:
+        self.config: Config = config
         self.mlx: Mlx = Mlx()
         self.mlx_ptr = self.mlx.mlx_init()
         _, screen_w, screen_h = self.mlx.mlx_get_screen_size(self.mlx_ptr)
@@ -73,8 +75,10 @@ class MazeDisplay:
             Settings.SHOW_FPS: True,
             Settings.SHOW_PATHFINDING: False,
             Settings.CUSTOM_LOGO_COLOR: False,
-            Settings.ANIMATE_MAZE_GENERATION: False,
-            Settings.ANIMATE_PATHFINDING: True,
+            Settings.ANIMATE_MAZE_GENERATION: 
+                config.get_bool(EConfig.ANIMATE_MAZE_GENERATION).get_value(),
+            Settings.ANIMATE_PATHFINDING: 
+                config.get_bool(EConfig.ANIMATE_MAZE_SOLVING).get_value(),
         })
 
         self.custom_logo_color: int = 0xFFFF0000
@@ -142,12 +146,12 @@ class MazeDisplay:
                 self.HEIGHT - self.MAZE_PADDING
             )
         self.maze_animation: AnimationState = AnimationState(
-            0,
+            config.get_float(EConfig.MAZE_GENERATION_SPEED).get_value(),
             self.maze.generate_order_size
         )
 
         self.path_animation: AnimationState = AnimationState(
-            10,
+            config.get_float(EConfig.MAZE_SOLVING_SPEED).get_value(),
             len(self.maze.path)
         )
 
@@ -521,21 +525,15 @@ class MazeDisplay:
     def redraw_middle_maze_animation(self) -> None:
         maze: MazeGenerator = self.maze
         image: Image = self.maze_image
-        cell_size: int = self.cell_size
 
-        image.draw_rectangle(
-            0, 0,
-            cell_size * maze.width * 2 + cell_size,
-            cell_size * maze.height * 2 + cell_size,
-            self.color_schemes.get(MazeColors.BACKGROUND)
-        )
+        image.clear(self.color_schemes.get(MazeColors.BACKGROUND))
 
         logo_color: int = self.color_schemes.get(MazeColors.LOGO)
         if self.settings.get(Settings.CUSTOM_LOGO_COLOR):
             logo_color = self.custom_logo_color
         wall_color: int = self.color_schemes.get(MazeColors.WALL)
 
-        for step_index in range(self.maze_animation.index):
+        for step_index in range(0, self.maze_animation.index):
             x, y = (
                 maze.generate_order[step_index].x,
                 maze.generate_order[step_index].y
@@ -671,7 +669,7 @@ class MazeDisplay:
         settings: MazeDisplaySettings = self.settings
         self.maze.generate()
         self.maze_animation.reset()
-        self.maze_animation.max_step = self.maze.generate_order_size
+        self.maze_animation.max_step = len(self.maze.generate_order)
 
         self.maze_image.clear(self.color_schemes.get(MazeColors.BACKGROUND))
         self.maze_image.need_update = True
@@ -686,7 +684,8 @@ class MazeDisplay:
 
     def change_color_scheme(self) -> None:
         self.color_schemes.next_scheme()
-        if (self.settings.get(Settings.ANIMATE_MAZE_GENERATION)):
+        if (self.settings.get(Settings.ANIMATE_MAZE_GENERATION)
+           and not self.maze_animation.finished):
             self.redraw_middle_maze_animation()
         if (self.settings.get(Settings.SHOW_PATHFINDING)
            and self.settings.get(Settings.ANIMATE_PATHFINDING)):
