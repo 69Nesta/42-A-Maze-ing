@@ -291,7 +291,10 @@ class MazeDisplay:
         total_height_spaceing = spaceing_h * nb_elements + total_height
 
         selector_gap_w = 10
-        selector_btn_width = (self.WIDTH_PANEL - 100) // 2 - selector_gap_w
+        selector_btn_width = (self.WIDTH_PANEL - (
+            100 if self.WIDTH_PANEL > 700 else 0
+        )) // 2
+        selector_btn_width -= selector_gap_w
         selector_btn_height = 50
         x_selector = self.WIDTH_PANEL // 2 - (
             (selector_btn_width * 2 + selector_gap_w) // 2
