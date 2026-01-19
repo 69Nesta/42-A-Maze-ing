@@ -232,7 +232,9 @@ class MazeGenerator:
                 direction = Direction.EAST
                 new_x += 1
 
-            if not grid[new_y][new_x].is_logo and not current_cell.is_undo_perfect and not grid[new_y][new_x].is_undo_perfect:
+            if (not grid[new_y][new_x].is_logo
+               and not current_cell.is_undo_perfect
+               and not grid[new_y][new_x].is_undo_perfect):
                 generate_order.append(Coords(new_x, new_y))
                 current_cell.is_undo_perfect = True
                 grid[new_y][new_x].is_undo_perfect = True
