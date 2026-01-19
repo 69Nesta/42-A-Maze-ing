@@ -2,7 +2,7 @@ import time
 from mlx import Mlx
 from enum import Enum
 from src.display.image import Image
-from src.display.buttons import ButtonManager, Button, ColorSelector
+from src.display.buttons import ButtonManager, Button, ColorSelector, Selector, SelectorButton, SelectorButton
 from src.maze import MazeGenerator
 from src.direction import Direction
 from src.errors import (DisplayMazeToBig)
@@ -340,6 +340,38 @@ class MazeDisplay:
                 s_selector,
                 0xFFE5FCFF,
                 lambda color: self.set_custom_logo_color(color),
+            )
+        )
+
+        self.buttons.add_selector(
+            'maze_algorithm',
+            Selector(
+                self.panel,
+                'Maze Algorithm',
+                10, 30,
+                [
+                    SelectorButton(
+                        'Recursive Backtracker',
+                        0, 50,
+                        300, 50,
+                        0xFF40798C,
+                        0xFF6597A8,
+                        0xFFE5FCFF,
+                        lambda _: print('Selected Recursive Backtracker')
+                    ),
+                    SelectorButton(
+                        'Prim\'s Algorithm',
+                        305, 50,
+                        300, 50,
+                        0xFF40798C,
+                        0xFF6597A8,
+                        0xFFE5FCFF,
+                        lambda _: print('Selected Prim\'s Algorithm')
+                    )
+                ],
+                0,
+                0xFFE5FCFF,
+                lambda _: print('Selected new maze algorithm')
             )
         )
 
