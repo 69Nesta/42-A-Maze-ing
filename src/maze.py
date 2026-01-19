@@ -139,7 +139,7 @@ class MazeGenerator:
 
         # self.create(sx, sy)
         self.generate_order += self.algo.create(self.grid, sx, sy)
-        self.generate_order += self.undo_perfect(self.grid, sx, sy, ex, ey)
+        self.undo_perfect(self.grid)
         self.generate_order_size = len(self.generate_order)
         self.solve(ex, ey)
 
@@ -196,8 +196,7 @@ class MazeGenerator:
 
         return []
 
-    def undo_perfect(self, grid: t_grid, sx: int, sy: int, ex: int, ey: int) -> list[Coords]:
-        generate_order: list[Coords] = []
+    def undo_perfect(self, grid: t_grid):
         available = []
         for row in self.grid:
             for cell in row:
@@ -215,7 +214,6 @@ class MazeGenerator:
                 if current_cell.walls[wall] is False:
                     direction = wall
             new_x, new_y = current_cell.x, current_cell.y
-            generate_order.append(Coords(new_x, new_y))
             if direction == Direction.NORTH:
                 direction = Direction.SOUTH
                 new_y += 1
@@ -235,7 +233,6 @@ class MazeGenerator:
             if (not grid[new_y][new_x].is_logo
                and not current_cell.is_undo_perfect
                and not grid[new_y][new_x].is_undo_perfect):
-                generate_order.append(Coords(new_x, new_y))
                 current_cell.is_undo_perfect = True
                 grid[new_y][new_x].is_undo_perfect = True
                 if direction == Direction.NORTH:
@@ -250,4 +247,3 @@ class MazeGenerator:
                 elif direction == Direction.WEST:
                     current_cell.del_west()
                     grid[new_y][new_x].del_east()
-        return generate_order
