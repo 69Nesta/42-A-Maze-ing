@@ -1,13 +1,12 @@
+from src.algo import Algo
 from src.types import t_point, t_grid
 from src.coords import Coords
-from random import randint, shuffle
+from random import randint
 
 
-class Prim:
+class Prim(Algo):
     def __init__(self, width: int, height: int, end: t_point):
-        self.end: t_point = end
-        self.height: int = height
-        self.width: int = width
+        super().__init__(width, height, end)
 
     def create(self, grid: t_grid, x: int, y: int) -> list[Coords]:
         generate_order: list[Coords] = []
@@ -62,4 +61,3 @@ class Prim:
                 for try_path in options:
                     try_path()
         return generate_order
-

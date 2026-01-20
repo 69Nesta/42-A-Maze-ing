@@ -1,6 +1,7 @@
 import time
 from mlx import Mlx
 from enum import Enum
+from src.algo_selector import EAlgo
 from src.config import Config, EConfig
 from src.display.image import Image
 from src.display.buttons import (
@@ -324,7 +325,7 @@ class MazeDisplay:
                         0xFF252627,
                         0xFFF2EFE9,
                         0xFFE5FCFF,
-                        lambda _: print('Selected Recursive Backtracker')
+                        lambda _: self.change_algo(EAlgo.BACKTRACK)
                     ),
                     SelectorButton(
                         'Prim',
@@ -335,12 +336,12 @@ class MazeDisplay:
                         0xFF252627,
                         0xFFF2EFE9,
                         0xFFE5FCFF,
-                        lambda _: print('Selected Prim\'s Algorithm')
+                        lambda _: self.change_algo(EAlgo.PRIM)
                     )
                 ],
                 0,
                 0xFFE5FCFF,
-                lambda _: print('Selected new maze algorithm')
+                None
             )
         )
         current_total_height += algo_selector_height + spaceing_h
@@ -393,7 +394,7 @@ class MazeDisplay:
                 button_width, button_height,
                 0xFF403233,
                 0xFFE5FCFF,
-                lambda: self.close(None)
+                lambda: self.exit_display()
             )
         )
         current_total_height += button_height + spaceing_h
@@ -664,6 +665,10 @@ class MazeDisplay:
         self.draw_start()
         self.draw_end()
 
+    def change_algo(self, algo: EAlgo) -> None:
+        self.debug.print('Changing maze algorithm...')
+        self.maze.algo.set_current_algo(algo)
+
     def generate_new_maze(self) -> None:
         self.debug.print('Generating new maze...')
         settings: MazeDisplaySettings = self.settings
@@ -719,6 +724,10 @@ class MazeDisplay:
         self.custom_logo_color = color
         self.settings.set(Settings.CUSTOM_LOGO_COLOR, True)
         self.maze_image.need_update = True
+
+    def exit_display(self) -> None:
+        self.debug.print('Exiting display...')
+        self.close(None)
 
     def get_cell_pos(
         self,
@@ -782,6 +791,6 @@ class MazeDisplay:
     def key_hook(self, keycode: int, _) -> int:
         match keycode:
             case 65307:  # ESC key
-                print("Escape key pressed. Exiting...")
+                self.debug.print("Escape key pressed. Exiting...")
                 self.close(None)
         return 0

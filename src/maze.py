@@ -1,13 +1,13 @@
 from typing import Generator
+from src.algo_selector import AlgoSelector, EAlgo
 from src.direction import Direction
 from src.cell import Cell
 from src.config import Config, EConfig
-from src.algo_prim import Prim
-from src.algo_backtrack import Backtrack
 from src.types import t_grid, t_path, t_point
 from src.coords import Coords
+from src.algo_prim import Prim
+from src.algo_backtrack import Backtrack
 from random import randint
-from src.direction import Direction
 from random import seed
 
 
@@ -26,16 +26,26 @@ class MazeGenerator:
         self.start: t_point = self.config.get_coords(EConfig.ENTRY).get_value()
         self.end: t_point = self.config.get_coords(EConfig.EXIT).get_value()
         self.seed: int = self.config.get_int(EConfig.MAZE_SEED).get_value()
-        if self.seed != 0:
-            seed(self.seed)
 
         self.grid: t_grid
         self.path: t_path
         self.generate_order: list[Coords] = []
         self.generate_order_size: int = 0
 
-        # self.algo = Prim(self.width, self.height, self.end)
-        self.algo = Backtrack(self.width, self.height, self.end)
+        self.algo: AlgoSelector = AlgoSelector()
+        self.algo.register_algo(
+            EAlgo.PRIM,
+            Prim(self.width, self.height, self.end)
+        )
+        self.algo.register_algo(
+            EAlgo.BACKTRACK,
+            Backtrack(self.width, self.height, self.end),
+            True
+        )
+
+    def update_seed(self, seed_value: int) -> None:
+        if (seed_value != 0):
+            seed(seed_value)
 
     def init_grid(self):
         self.grid = [
@@ -70,9 +80,7 @@ class MazeGenerator:
         start_coords: t_point = (sx, sy)
         ex, ey = map(int, lines[-2].split(','))
         end_coords: t_point = (ex, ey)
-        # path_directions: str = lines[-1]
 
-        # Parse wall data
         for y, line in enumerate(wall_data):
             for x, char in enumerate(line):
                 print(f"Parsing cell at ({x}, {y}): {char}")
@@ -91,18 +99,6 @@ class MazeGenerator:
         self.end = end_coords
         self.path = []
         self.path = self.a_star_find(ex, ey)
-        # for direction in path_directions:
-        #     match direction:
-        #         case 'N':
-        #             self.path.append(Direction.NORTH)
-        #         case 'E':
-        #             self.path.append(Direction.EAST)
-        #         case 'S':
-        #             self.path.append(Direction.SOUTH)
-        #         case 'W':
-        #             self.path.append(Direction.WEST)
-        #         case _:
-        #             break
 
     def pathfinding_next_step(
                 self
@@ -133,7 +129,7 @@ class MazeGenerator:
         sx, sy = self.start
         ex, ey = self.end
 
-        seed(self.seed)
+        self.update_seed(self.seed)
 
         self.generate_order.clear()
         self.init_grid()
@@ -141,7 +137,7 @@ class MazeGenerator:
         self.display_logo()
 
         # self.create(sx, sy)
-        self.generate_order += self.algo.create(self.grid, sx, sy)
+        self.generate_order += self.algo.get().create(self.grid, sx, sy)
         self.undo_perfect(self.grid)
         self.generate_order_size = len(self.generate_order)
         self.solve(ex, ey)
@@ -208,10 +204,14 @@ class MazeGenerator:
                 for wall in cell.walls:
                     if cell.walls[wall] is True:
                         nb_wall += 1
-                if nb_wall == 3 and cell.x >= 1 and cell.x < self.width - 1 and cell.y >= 1 and cell.y < self.height - 1 :
+                if (nb_wall == 3
+                   and cell.x >= 1
+                   and cell.x < self.width - 1
+                   and cell.y >= 1
+                   and cell.y < self.height - 1):
                     available.append(cell)
         available_iteration = int(len(available) * 0.3)
-        for i in range(available_iteration):
+        for _ in range(available_iteration):
             current_cell = available.pop(randint(0, len(available) - 1))
             for wall in current_cell.walls:
                 if current_cell.walls[wall] is False:
