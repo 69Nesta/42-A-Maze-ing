@@ -13,6 +13,7 @@ from src.cell import Cell
 from src.display.text_manager import TextManager
 from src.display.schemes_colors import (MazeColors, MazeSchemesColors)
 from src.display.animation_state import AnimationState
+from src.debug import Debug
 
 
 class Settings(Enum):
@@ -50,6 +51,7 @@ class MazeDisplay:
 
     def __init__(self, maze: MazeGenerator, config: Config) -> None:
         self.config: Config = config
+        self.debug: Debug = Debug(config)
         self.mlx: Mlx = Mlx()
         self.mlx_ptr = self.mlx.mlx_init()
         _, screen_w, screen_h = self.mlx.mlx_get_screen_size(self.mlx_ptr)
@@ -75,9 +77,9 @@ class MazeDisplay:
             Settings.SHOW_FPS: True,
             Settings.SHOW_PATHFINDING: False,
             Settings.CUSTOM_LOGO_COLOR: False,
-            Settings.ANIMATE_MAZE_GENERATION: 
+            Settings.ANIMATE_MAZE_GENERATION:
                 config.get_bool(EConfig.ANIMATE_MAZE_GENERATION).get_value(),
-            Settings.ANIMATE_PATHFINDING: 
+            Settings.ANIMATE_PATHFINDING:
                 config.get_bool(EConfig.ANIMATE_MAZE_SOLVING).get_value(),
         })
 
@@ -268,7 +270,7 @@ class MazeDisplay:
         )
 
     def render_background(self) -> None:
-        print("Rendering background...")
+        self.debug.print("Rendering background...")
         image: Image = self.background_image
 
         if not image.need_update:
@@ -302,7 +304,7 @@ class MazeDisplay:
         selector_btn_height = 50
         x_selector = self.WIDTH_PANEL // 2 - (
             (selector_btn_width * 2 + selector_gap_w) // 2
-        ) - 10
+        )
 
         current_total_height = (self.HEIGHT // 2)
         current_total_height -= total_height_spaceing // 2
@@ -418,12 +420,9 @@ class MazeDisplay:
             )
 
     def render_panel(self) -> None:
-        print("Rendering panel...")
+        self.debug.print("Rendering panel...")
         image: Image = self.panel
         buttons: ButtonManager = self.buttons
-        print(f'Screen size: {self.WIDTH}x{self.HEIGHT}')
-        print(f'Panel size: {self.WIDTH_PANEL}x{self.HEIGHT}')
-        print('')
 
         image.draw_rectangle(
             0, 0,
@@ -666,6 +665,7 @@ class MazeDisplay:
         self.draw_end()
 
     def generate_new_maze(self) -> None:
+        self.debug.print('Generating new maze...')
         settings: MazeDisplaySettings = self.settings
         self.maze.generate()
         self.maze_animation.reset()
@@ -683,6 +683,7 @@ class MazeDisplay:
             self.path_image.need_update = True
 
     def change_color_scheme(self) -> None:
+        self.debug.print('Changing color scheme...')
         self.color_schemes.next_scheme()
         if (self.settings.get(Settings.ANIMATE_MAZE_GENERATION)
            and not self.maze_animation.finished):
@@ -695,6 +696,7 @@ class MazeDisplay:
         self.background_image.need_update = True
 
     def toggle_pathfinding(self) -> None:
+        self.debug.print('Toggling pathfinding...')
         settings: MazeDisplaySettings = self.settings
         if (settings.get(Settings.ANIMATE_MAZE_GENERATION)
            and not self.maze_animation.finished):
@@ -713,6 +715,7 @@ class MazeDisplay:
         self.maze_image.need_update = True
 
     def set_custom_logo_color(self, color: int) -> None:
+        self.debug.print('Setting custom logo color...')
         self.custom_logo_color = color
         self.settings.set(Settings.CUSTOM_LOGO_COLOR, True)
         self.maze_image.need_update = True

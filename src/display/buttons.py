@@ -255,7 +255,6 @@ class ButtonManager:
 
         color_selector = self.get_color_selector_at(x, y)
         if color_selector:
-            print("Color selector clicked")
             pixel_color = self.image.get_pixel(x, y)
             color_selector.execute(pixel_color)
 

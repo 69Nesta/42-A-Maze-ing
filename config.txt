@@ -44,3 +44,6 @@ ANIMATE_MAZE_SOLVING = True
 # Higher value = slower animation
 # Lower value = faster animation
 MAZE_SOLVING_SPEED = 10
+
+# Enable or disable debug mode
+DEBUG_MODE = False
