@@ -19,9 +19,9 @@ install:
 	sh src/lib/install-mlx-zsh.sh
 
 clean:
-	rm -rf .venv
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	rm -rf dist
 
 lint:
 	flake8 .
