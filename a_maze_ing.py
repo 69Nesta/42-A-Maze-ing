@@ -1,5 +1,5 @@
 import sys
-from src.maze import MazeApp
+from mazegen import MazeApp
 
 if __name__ == '__main__':
     args = sys.argv[1:]
