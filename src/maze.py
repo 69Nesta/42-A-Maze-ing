@@ -26,6 +26,9 @@ class MazeGenerator:
         self.start: t_point = self.config.get_coords(EConfig.ENTRY).get_value()
         self.end: t_point = self.config.get_coords(EConfig.EXIT).get_value()
         self.seed: int = self.config.get_int(EConfig.MAZE_SEED).get_value()
+        self.output_file: str = self.config.get_str(
+            EConfig.OUTPUT_FILE
+        ).get_value()
 
         self.grid: t_grid
         self.path: t_path
@@ -64,13 +67,34 @@ class MazeGenerator:
         return self.grid[y][x]
 
     def export(self) -> str:
-        lines = []
+        grid = []
         for row in self.grid:
             line = ''
             for cell in row:
                 line += cell.export()
-            lines.append(line)
-        return '\n'.join(lines)
+            grid.append(line)
+
+        sx, sy = self.start
+        ex, ey = self.end
+        grid.append(f"\n{sx},{sy}")
+        grid.append(f"{ex},{ey}")
+
+        direction = ''
+        if self.path:
+            for step in self.path:
+                _, _, dir = step
+                if dir == Direction.NORTH:
+                    direction += 'N'
+                elif dir == Direction.EAST:
+                    direction += 'E'
+                elif dir == Direction.SOUTH:
+                    direction += 'S'
+                elif dir == Direction.WEST:
+                    direction += 'W'
+
+        if direction:
+            grid.append(direction)
+        return '\n'.join(grid)
 
     def import_maze(self, data: str):
         self.init_grid()
@@ -136,11 +160,16 @@ class MazeGenerator:
         self.init_path()
         self.display_logo()
 
-        # self.create(sx, sy)
         self.generate_order += self.algo.get().create(self.grid, sx, sy)
         self.undo_perfect(self.grid)
         self.generate_order_size = len(self.generate_order)
         self.solve(ex, ey)
+
+        try:
+            with open(self.output_file, 'w') as f:
+                f.write(self.export())
+        except Exception as e:
+            print(f"Error saving maze to file: {e}")
 
     def display_logo(self):
         center_x = (self.width - len(logo[0])) // 2

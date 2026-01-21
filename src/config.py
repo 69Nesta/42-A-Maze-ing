@@ -137,6 +137,14 @@ class ConfigParser:
                     line_number += 1
                     if (line.strip() == '' or line.strip().startswith('#')):
                         continue
+                    if '=' in line and '"' in line:
+                        key_part, value_part = line.split('=', 1)
+                        key = key_part.strip().lower()
+                        value = value_part.strip()
+                        if value.startswith('"') and value.endswith('"'):
+                            value = value[1:-1]
+                        self.raw_data[key] = (value, line_number)
+                        continue
                     config_line = line.replace('\n', '').split('=')
 
                     if (len(config_line) != 2):
