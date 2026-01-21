@@ -1,5 +1,5 @@
 # Width of the maze in cells (horizontal size)
-WIDTH = 5
+WIDTH = 4
 
 # Height of the maze in cells (vertical size)
 HEIGHT = 5
@@ -10,7 +10,7 @@ ENTRY = 0, 0
 
 # Exit point of the maze (x, y coordinates)
 # This is where the maze is solved
-EXIT = 4, 4
+EXIT = 3, 4
 
 # File name where the generated maze will be saved
 OUTPUT_FILE = "maze.txt"
@@ -24,6 +24,9 @@ PERFECT = True
 # Set to None or change the number for a different maze
 # If set you cant not generate a new maze on display
 MAZE_SEED = 0
+
+# File name of the logo to display in the maze
+LOGO_FILE = "42logo.txt"
 
 # Enable or disable animation during maze generation
 # True = show generation step-by-step

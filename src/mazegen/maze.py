@@ -9,8 +9,10 @@ class MazeApp:
         try:
             self.config = Config(config_file)
             self.maze = MazeGenerator(self.config)
-            self.maze.generate()
-
             self.renderer = MazeDisplay(self.maze, self.config)
+            self.renderer.generate_new_maze()
+            self.renderer.run()
+            # self.maze.generate()
+
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)

@@ -25,6 +25,9 @@ PERFECT = Yes
 # If set you cant not generate a new maze on display
 MAZE_SEED = 0
 
+# File name of the logo to display in the maze
+LOGO_FILE = "42logo.txt"
+
 # Enable or disable animation during maze generation
 # True = show generation step-by-step
 # False = generate instantly

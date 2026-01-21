@@ -55,4 +55,23 @@ def test_invalid_parameter_values(capsys):
 def test_too_small(capsys):
     MazeApp('tests/too_small.txt')
     captured = capsys.readouterr()
-    assert captured.err == 'Error: list index out of range\n'
+    assert captured.err == 'Error: Maze dimensions must be at least 5x5\n'
+
+
+def test_logo_too_big(capsys):
+    MazeApp('tests/logo_too_big.txt')
+    captured = capsys.readouterr()
+    assert captured.err == 'Error: The logo is to big\n'
+
+
+def test_logo_on_entry_or_exit(capsys):
+    MazeApp('tests/logo_on_entry_or_exit.txt')
+    captured = capsys.readouterr()
+    assert captured.err == \
+        'Error: The logo can t be on the exit or the start\n'
+
+
+def test_logo_inaccessible_areas(capsys):
+    MazeApp('tests/logo_inaccessible_areas.txt')
+    captured = capsys.readouterr()
+    assert captured.err == 'Error: Logo invalid, there must be no inaccessible areas\n'  # noqa: E501
