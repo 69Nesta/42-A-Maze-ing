@@ -1,0 +1,52 @@
+# Width of the maze in cells (horizontal size)
+WIDTH = -10
+
+# Height of the maze in cells (vertical size)
+HEIGHT = 10
+
+# Entry point of the maze (x, y coordinates)
+# This is where the player/solver starts
+ENTRY = 0, 0
+
+# Exit point of the maze (x, y coordinates)
+# This is where the maze is solved
+EXIT = 9, 9
+
+# File name where the generated maze will be saved
+OUTPUT_FILE = "maze.txt"
+
+# If True, generate a "perfect" maze
+# A perfect maze has exactly one path between any two points (no loops)
+PERFECT = True
+
+# Seed for the random number generator
+# Using the same seed will always generate the same maze
+# Set to None or change the number for a different maze
+# If set you cant not generate a new maze on display
+MAZE_SEED = 0
+
+# Enable or disable animation during maze generation
+# True = show generation step-by-step
+# False = generate instantly
+ANIMATE_MAZE_GENERATION = False
+
+# Speed of the maze generation animation in milliseconds
+# Higher value = slower animation
+# Lower value = faster animation
+MAZE_GENERATION_SPEED = 10
+
+# Enable or disable animation during maze solving
+# True = show the solving process step-by-step
+# False = solve instantly
+ANIMATE_MAZE_SOLVING = False
+
+# Speed of the maze solving animation in milliseconds
+# Higher value = slower animation
+# Lower value = faster animation
+MAZE_SOLVING_SPEED = 10
+
+# Enable or disable debug mode
+DEBUG_MODE = True
+
+# Show fps 
+SHOW_FPS = True

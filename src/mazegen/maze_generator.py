@@ -30,14 +30,17 @@ class MazeGenerator:
             EConfig.OUTPUT_FILE
         ).get_value()
 
+        if self.width <= 0 or self.height <= 0:
+            raise ValueError("Maze dimensions must be positive integers")
+
         sx, sy = self.start
         ex, ey = self.end
         if (sx < 0 or sx >= self.width
            or sy < 0 or sy >= self.height):
-            raise ValueError("Start coordinates are out of bounds")
+            raise ValueError("Entry coordinates are out of bounds")
         if (ex < 0 or ex >= self.width
            or ey < 0 or ey >= self.height):
-            raise ValueError("End coordinates are out of bounds")
+            raise ValueError("Exit coordinates are out of bounds")
 
         self.grid: t_grid
         self.path: t_path

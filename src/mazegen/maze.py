@@ -1,3 +1,4 @@
+import sys
 from .display.maze_display import MazeDisplay
 from .config import Config
 from .maze_generator import MazeGenerator
@@ -12,4 +13,4 @@ class MazeApp:
 
             self.renderer = MazeDisplay(self.maze, self.config)
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error: {e}", file=sys.stderr)

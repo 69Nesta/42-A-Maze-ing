@@ -58,6 +58,9 @@ run: install
 debug: install
 	$(V_PYTHON) -m pdb $(MAIN)
 
+test: install
+	$(V_PYTHON) -m pytest tests/tester.py
+
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
