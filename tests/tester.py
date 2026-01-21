@@ -74,4 +74,5 @@ def test_logo_on_entry_or_exit(capsys):
 def test_logo_inaccessible_areas(capsys):
     MazeApp('tests/logo_inaccessible_areas.txt')
     captured = capsys.readouterr()
-    assert captured.err == 'Error: Logo invalid, there must be no inaccessible areas\n'  # noqa: E501
+    assert captured.err == \
+        'Error: Logo invalid, there must be no inaccessible areas\n'
