@@ -49,7 +49,7 @@ ANIMATE_MAZE_SOLVING = True
 MAZE_SOLVING_SPEED = 10
 
 # Enable or disable debug mode
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 # Show fps
 SHOW_FPS = True

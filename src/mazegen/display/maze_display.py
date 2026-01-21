@@ -494,22 +494,11 @@ class MazeDisplay:
                 maze.generate_order[step_index].y
             )
             cell = maze.get_cell(x, y)
-            self.draw_cell_border(
+            self.draw_cell_animate(
+                x, y,
                 cell,
-                x,
-                y,
-                wall_color
+                wall_color, logo_color
             )
-            if cell.is_full():
-                self.draw_cell_fill(
-                    x, y,
-                    logo_color
-                )
-            match (x, y):
-                case maze.start:
-                    self.draw_start()
-                case maze.end:
-                    self.draw_end()
 
         if not self.maze_animation.finished:
             self.maze_image.need_update = True
@@ -716,6 +705,9 @@ class MazeDisplay:
         self.custom_logo_color = color
         self.settings.set(Settings.CUSTOM_LOGO_COLOR, True)
         self.maze_image.need_update = True
+        if (self.settings.get(Settings.ANIMATE_MAZE_GENERATION)
+           and not self.maze_animation.finished):
+            self.redraw_middle_maze_animation()
 
     def exit_display(self) -> None:
         self.debug.print('Exiting display...')
