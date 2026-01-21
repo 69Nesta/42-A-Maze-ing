@@ -1,7 +1,7 @@
-from src.types import t_point, t_grid
-from src.direction import Direction
-from src.coords import Coords
-from src.algo import Algo
+from .types import t_point, t_grid
+from .direction import Direction
+from .coords import Coords
+from .algo import Algo
 from random import shuffle
 
 

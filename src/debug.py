@@ -1,4 +1,4 @@
-from src.config import Config, EConfig
+from .config import Config, EConfig
 
 
 class Debug:

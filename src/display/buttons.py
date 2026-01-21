@@ -1,6 +1,6 @@
 from typing import Callable
-from src.display.image import Image
-from src.display.text_manager import TextManager
+from .image import Image
+from .text_manager import TextManager
 
 
 class Button:

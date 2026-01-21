@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Generic, TypeVar, cast
-from src.errors import (
+from .errors import (
     ConfigFormatError,
     ConfigMissingError,
     ConfigValueError
@@ -29,12 +29,12 @@ class ConfigValue(Generic[T]):
     def __init__(
                 self,
                 key: EConfig,
-                value_type: type,
+                value_type: type | tuple,
                 default: T | None = None,
                 required: bool = True
             ) -> None:
         self.key: EConfig = key
-        self.value_type: type = value_type
+        self.value_type: type | tuple = value_type
         self.required: bool = required
         self.value: T | None = default
 
@@ -88,7 +88,7 @@ class ConfigValue(Generic[T]):
             values = value.split(',')
             if len(values) != len(types_tuple):
                 raise ConfigValueError(key, value, line)
-            parsed_values = []
+            parsed_values: list = []
             for i in range(len(values)):
                 val = values[i].strip()
                 typ = types_tuple[i]

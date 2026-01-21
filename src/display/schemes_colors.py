@@ -2,23 +2,16 @@ from enum import Enum
 
 
 class MazeColors(Enum):
-    BACKGROUND: int = 0
-    WALL: int = 1
-    PATH: int = 2
-    START: int = 3
-    END: int = 4
-    LOGO: int = 5
+    BACKGROUND = 0
+    WALL = 1
+    PATH = 2
+    START = 3
+    END = 4
+    LOGO = 5
 
-
-# Color schemes:
-# fff275,ff8c42,ff3c38,a23e48,6c8ead
-# 88ccf1,c1dff0,3587a4,2d848a,2d898b
-# 242331,533e2d,a27035,b88b4a,ddca7d
-# 3066be,119da4,6d9dc5,80ded9,aeecef
-# 476a6f,519e8a,7eb09b,c5c9a4,ecbeb4
 
 class MazeSchemesColors:
-    def __init__(self):
+    def __init__(self) -> None:
         self.schemes: list[dict[MazeColors, int]] = [
             # Original scheme purple-ish
             {

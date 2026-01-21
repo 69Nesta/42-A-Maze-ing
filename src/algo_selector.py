@@ -1,5 +1,5 @@
 from enum import Enum
-from src.algo import Algo
+from .algo import Algo
 
 
 class EAlgo(Enum):

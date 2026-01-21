@@ -1,4 +1,4 @@
-from src.types import t_point
+from .types import t_point
 
 
 class Coords:

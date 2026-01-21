@@ -1,20 +1,20 @@
 import time
 from mlx import Mlx
 from enum import Enum
-from src.algo_selector import EAlgo
-from src.config import Config, EConfig
-from src.display.image import Image
-from src.display.buttons import (
+from ..algo_selector import EAlgo
+from ..config import Config, EConfig
+from .image import Image
+from .buttons import (
     ButtonManager, Button, ColorSelector, Selector, SelectorButton
 )
-from src.maze import MazeGenerator
-from src.direction import Direction
-from src.errors import (DisplayMazeToBig)
-from src.cell import Cell
-from src.display.text_manager import TextManager
-from src.display.schemes_colors import (MazeColors, MazeSchemesColors)
-from src.display.animation_state import AnimationState
-from src.debug import Debug
+from ..maze_generator import MazeGenerator
+from ..direction import Direction
+from ..errors import (DisplayMazeToBig)
+from ..cell import Cell
+from .text_manager import TextManager
+from .schemes_colors import (MazeColors, MazeSchemesColors)
+from .animation_state import AnimationState
+from ..debug import Debug
 
 
 class Settings(Enum):
