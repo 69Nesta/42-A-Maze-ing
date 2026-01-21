@@ -6,6 +6,7 @@ class Cell:
         self.x = x
         self.y = y
         self.is_logo = False
+        self.logo_blank = False
         self.is_visited = False
         self.is_next = False
         self.is_undo_perfect = False

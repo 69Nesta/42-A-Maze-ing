@@ -11,11 +11,21 @@ from random import randint
 from random import seed
 
 
-logo = [[1, 0, 0, 0, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 0, 1, 1, 1],
-        [0, 0, 1, 0, 1, 0, 0],
-        [0, 0, 1, 0, 1, 1, 1]]
+def import_logo(file: str) -> list:
+        all = open(file, 'r')
+        logo = []
+        for row in all:
+            line = []
+            for elt in row:
+                if elt == " " or elt == "0":
+                    line.append(0)
+                elif elt == '\n':
+                    pass
+                else:
+                    line.append(1)
+            logo.append(line)
+        all.close()
+        return logo
 
 
 class MazeGenerator:
@@ -172,6 +182,7 @@ class MazeGenerator:
 
         self.generate_order += self.algo.get().create(self.grid, sx, sy)
         self.undo_perfect(self.grid)
+        self.check_logo()
         self.generate_order_size = len(self.generate_order)
         self.solve(ex, ey)
 
@@ -182,16 +193,34 @@ class MazeGenerator:
             print(f"Error saving maze to file: {e}")
 
     def display_logo(self):
-        center_x = (self.width - len(logo[0])) // 2
-        center_y = (self.height - len(logo)) // 2
-        for i in range(len(logo)):
-            for j in range(len(logo[i])):
-                if logo[i][j] == 1:
-                    x = int(center_x) + j
-                    y = int(center_y) + i
-
+        self.logo = import_logo("logo.txt")
+        self.center_x = (self.width - len(self.logo[0])) // 2
+        self.center_y = (self.height - len(self.logo)) // 2
+        for i in range(len(self.logo)):
+            for j in range(len(self.logo[i])):
+                x = int(self.center_x) + j
+                y = int(self.center_y) + i
+                if (x <= 1) or (y <= 1):
+                    raise(ValueError("The logo is to big"))
+                if self.logo[i][j] == 1:
+                    if self.end == (x, y) or self.start == (x, y):
+                        raise(ValueError("The logo can t be on the exit or the start"))
                     self.grid[y][x].is_logo = True
                     self.generate_order.append(Coords(x, y))
+                else:
+                    self.grid[y][x].logo_blank = True
+
+    def check_logo(self):
+
+        for i in range(len(self.logo)):
+            for j in range(len(self.logo[i])):
+                x = int(self.center_x) + j
+                y = int(self.center_y) + i
+                if (self.grid[y][x].logo_blank is True):
+                    if self.a_star_find(x,y) == []:
+                        raise(ValueError("Logo invalid, there must \
+be no inaccessible areas"))
+
 
     def solve(self, x: int, y: int) -> None:
         self.path = self.a_star_find(x, y)
