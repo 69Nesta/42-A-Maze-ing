@@ -20,6 +20,7 @@ class EConfig(Enum):
     PERFECT = 'perfect'
     DEBUG = 'debug_mode'
     MAZE_SEED = 'maze_seed'
+    LOGO_FILE = 'logo_file'
     ANIMATE_MAZE_GENERATION = 'animate_maze_generation'
     MAZE_GENERATION_SPEED = 'maze_generation_speed'
     ANIMATE_MAZE_SOLVING = 'animate_maze_solving'
@@ -184,6 +185,7 @@ class Config:
         parser.register(ConfigValue[tuple](EConfig.EXIT, (int, int)))
         parser.register(ConfigValue[str](EConfig.OUTPUT_FILE, str))
         parser.register(ConfigValue[bool](EConfig.PERFECT, bool))
+        parser.register(ConfigValue[str](EConfig.LOGO_FILE, str))
         parser.register(ConfigValue[bool](EConfig.DEBUG, bool, False, False))
         parser.register(ConfigValue[int](
             EConfig.MAZE_SEED, int, 0, False

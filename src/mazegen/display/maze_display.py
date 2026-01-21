@@ -162,8 +162,6 @@ class MazeDisplay:
         self.mlx.mlx_hook(self.win_ptr, 33, 1 << 17, self.close, None)
         self.mlx.mlx_key_hook(self.win_ptr, self.key_hook, None)
         self.mlx.mlx_mouse_hook(self.win_ptr, self.mouse_hook, None)
-        self.start_render()
-        self.mlx.mlx_loop(self.mlx_ptr)
 
     def close(self, _) -> int:
         try:
@@ -177,12 +175,10 @@ class MazeDisplay:
                 pass
         return 0
 
-    def start_render(self) -> None:
-        # self.render(None)
-
-        # replace with looped render call
+    def run(self) -> None:
         self.start_time = time.time()
         self.mlx.mlx_loop_hook(self.mlx_ptr, self.render, None)
+        self.mlx.mlx_loop(self.mlx_ptr)
 
     def render(self, _) -> int:
         current_time = time.time()

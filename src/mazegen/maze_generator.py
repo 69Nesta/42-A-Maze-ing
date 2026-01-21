@@ -11,23 +11,6 @@ from random import randint
 from random import seed
 
 
-def import_logo(file: str) -> list:
-        all = open(file, 'r')
-        logo = []
-        for row in all:
-            line = []
-            for elt in row:
-                if elt == " " or elt == "0":
-                    line.append(0)
-                elif elt == '\n':
-                    pass
-                else:
-                    line.append(1)
-            logo.append(line)
-        all.close()
-        return logo
-
-
 class MazeGenerator:
     def __init__(self, config: Config):
         self.config: Config = config
@@ -39,18 +22,27 @@ class MazeGenerator:
         self.output_file: str = self.config.get_str(
             EConfig.OUTPUT_FILE
         ).get_value()
+        self.logo_file: str = self.config.get_str(
+            EConfig.LOGO_FILE
+        ).get_value()
+        self.logo: list[list[int]] = self.import_logo(self.logo_file)
+
+        if self.width <= 0 or self.height <= 0:
+            raise ValueError("Maze dimensions must be positive integers")
+        elif self.width < 5 or self.height < 5:
+            raise ValueError("Maze dimensions must be at least 5x5")
 
         sx, sy = self.start
         ex, ey = self.end
         if (sx < 0 or sx >= self.width
            or sy < 0 or sy >= self.height):
-            raise ValueError("Start coordinates are out of bounds")
+            raise ValueError("Entry coordinates are out of bounds")
         if (ex < 0 or ex >= self.width
            or ey < 0 or ey >= self.height):
-            raise ValueError("End coordinates are out of bounds")
+            raise ValueError("Exit coordinates are out of bounds")
 
-        self.grid: t_grid
-        self.path: t_path
+        self.grid: t_grid = []
+        self.path: t_path = []
         self.generate_order: list[Coords] = []
         self.generate_order_size: int = 0
 
@@ -144,6 +136,22 @@ class MazeGenerator:
         self.path = []
         self.path = self.a_star_find(ex, ey)
 
+    @staticmethod
+    def import_logo(file: str) -> list[list[int]]:
+        logo: list[list[int]] = []
+        with open(file, 'r') as all:
+            for row in all:
+                line: list[int] = []
+                for elt in row:
+                    if elt == " " or elt == "0":
+                        line.append(0)
+                    elif elt == '\n':
+                        pass
+                    else:
+                        line.append(1)
+                logo.append(line)
+        return logo
+
     def pathfinding_next_step(
                 self
                 ) -> Generator[tuple[int, int, Direction], None, None]:
@@ -192,8 +200,7 @@ class MazeGenerator:
         except Exception as e:
             print(f"Error saving maze to file: {e}")
 
-    def display_logo(self):
-        self.logo = import_logo("logo.txt")
+    def display_logo(self) -> None:
         self.center_x = (self.width - len(self.logo[0])) // 2
         self.center_y = (self.height - len(self.logo)) // 2
         for i in range(len(self.logo)):
@@ -210,17 +217,15 @@ class MazeGenerator:
                 else:
                     self.grid[y][x].logo_blank = True
 
-    def check_logo(self):
-
+    def check_logo(self) -> None:
         for i in range(len(self.logo)):
             for j in range(len(self.logo[i])):
                 x = int(self.center_x) + j
                 y = int(self.center_y) + i
                 if (self.grid[y][x].logo_blank is True):
-                    if self.a_star_find(x,y) == []:
-                        raise(ValueError("Logo invalid, there must \
-be no inaccessible areas"))
-
+                    if self.a_star_find(x, y) == []:
+                        raise (ValueError('Logo invalid, there must ' +
+                                          'be no inaccessible areas'))
 
     def solve(self, x: int, y: int) -> None:
         self.path = self.a_star_find(x, y)
