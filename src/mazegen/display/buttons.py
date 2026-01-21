@@ -10,7 +10,7 @@ class Button:
                  width: int, height: int,
                  background: int,
                  text_color: int,
-                 callback: Callable | None = None):
+                 callback: Callable[[], None] | None = None):
         self.label: str = label
         self.x: int = x
         self.y: int = y
@@ -18,7 +18,7 @@ class Button:
         self.height: int = height
         self.background: int = background
         self.text_color: int = text_color
-        self.callback: Callable | None = callback
+        self.callback: Callable[[], None] | None = callback
 
     def execute(self) -> None:
         if self.callback is not None:
@@ -38,13 +38,13 @@ class ColorSelector:
                  x: int, y: int,
                  size: int,
                  label_color: int,
-                 callback: Callable | None = None):
+                 callback: Callable[[int], None] | None = None):
         self.x: int = x
         self.y: int = y
         self.size: int = size
         self.label: str = label
         self.label_color: int = label_color
-        self.callback: Callable | None = callback
+        self.callback: Callable[[int], None] | None = callback
         self.offset_y: int = 20
 
     def collide(self, x: int, y: int) -> bool:
@@ -72,7 +72,7 @@ class SelectorButton:
                 selected_background: int,
                 border_color: int,
                 text_color: int,
-                callback: Callable | None = None
+                callback: Callable[[int], None] | None = None
             ) -> None:
         self.label: str = label
         self.x: int = x
@@ -83,7 +83,7 @@ class SelectorButton:
         self.selected_background: int = selected_background
         self.border_color: int = border_color
         self.text_color: int = text_color
-        self.callback: Callable | None = callback
+        self.callback: Callable[[int], None] | None = callback
 
     def execute(self, index: int) -> None:
         if self.callback is not None:
@@ -117,7 +117,7 @@ class Selector:
                 choice: list[SelectorButton],
                 default_index: int,
                 text_color: int,
-                callback: Callable | None = None
+                callback: Callable[[int], None] | None = None
             ) -> None:
         self.image: Image = image
         self.label: str = label
@@ -126,7 +126,7 @@ class Selector:
         self.choice: list[SelectorButton] = choice
         self.current_index: int = default_index
         self.text_color: int = text_color
-        self.callback: Callable | None = callback
+        self.callback: Callable[[int], None] | None = callback
 
     def execute(self, index: int) -> None:
         if self.callback is not None:

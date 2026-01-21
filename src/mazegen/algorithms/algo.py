@@ -1,5 +1,5 @@
-from .types import t_point, t_grid
-from .coords import Coords
+from ..types import t_point, t_grid
+from ..coords import Coords
 
 
 class Algo:

@@ -1,7 +1,7 @@
 import time
 from mlx import Mlx
 from enum import Enum
-from ..algo_selector import EAlgo
+from ..algorithms.algo_selector import EAlgo
 from ..config import Config, EConfig
 from .image import Image
 from .buttons import (

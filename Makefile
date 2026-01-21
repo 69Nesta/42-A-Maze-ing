@@ -15,10 +15,10 @@ OUTPUT_FILE		= $(DIST_DIR)/mazegen-1.0.0-py3-none-any.whl
 MAIN			= a_maze_ing.py
 SRCS_DIR		= ./src/mazegen
 SRCS 			= \
-	$(SRCS_DIR)/algo_backtrack.py \
-	$(SRCS_DIR)/algo_prim.py \
-	$(SRCS_DIR)/algo.py \
-	$(SRCS_DIR)/algo_selector.py \
+	$(SRCS_DIR)/algorithms/algo_backtrack.py \
+	$(SRCS_DIR)/algorithms/algo_prim.py \
+	$(SRCS_DIR)/algorithms/algo.py \
+	$(SRCS_DIR)/algorithms/algo_selector.py \
 	$(SRCS_DIR)/cell.py \
 	$(SRCS_DIR)/config.py \
 	$(SRCS_DIR)/coords.py \

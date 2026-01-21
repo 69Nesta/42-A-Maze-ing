@@ -1,6 +1,6 @@
 from .algo import Algo
-from .types import t_point, t_grid
-from .coords import Coords
+from ..types import t_point, t_grid
+from ..coords import Coords
 from random import randint
 
 

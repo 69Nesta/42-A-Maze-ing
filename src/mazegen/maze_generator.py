@@ -1,12 +1,13 @@
 from typing import Generator
-from .algo_selector import AlgoSelector, EAlgo, Algo
 from .direction import Direction
 from .cell import Cell
 from .config import Config, EConfig
 from .types import t_grid, t_path, t_point
 from .coords import Coords
-from .algo_prim import Prim
-from .algo_backtrack import Backtrack
+from .algorithms.algo import Algo
+from .algorithms.algo_selector import AlgoSelector, EAlgo
+from .algorithms.algo_prim import Prim
+from .algorithms.algo_backtrack import Backtrack
 from random import randint
 from random import seed
 
