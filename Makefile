@@ -71,11 +71,11 @@ fclean: clean
 	rm -rf $(VENV)
 
 lint:
-	$(FLAKE) .
-	$(MYPY) . $(MYPY_FLAGS)
+	$(FLAKE) src
+	$(MYPY) src $(MYPY_FLAGS)
 
 lint-strict:
-	$(FLAKE) .
-	$(MYPY) . --strict
+	$(FLAKE) src
+	$(MYPY) src --strict
 
 .PHONY: build install run debug clean fclean lint lint-strict
