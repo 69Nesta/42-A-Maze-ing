@@ -8,6 +8,14 @@ class DisplayError(Exception):
     pass
 
 
+class ConfigFileNotFoundError(ConfigError):
+    '''Indicates that the config file was not found.'''
+    def __init__(self) -> None:
+        '''Indicates that the config file was not found.'''
+        message = 'Config file not found.'
+        super().__init__(message)
+
+
 class ConfigFormatError(ConfigError):
     '''Indicates a formatting error in the config file.'''
     def __init__(self, at_key: str = '', line_number: int = -1) -> None:

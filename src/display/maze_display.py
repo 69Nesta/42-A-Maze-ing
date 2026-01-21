@@ -75,7 +75,8 @@ class MazeDisplay:
         self.frame_count: int = 0
 
         self.settings: MazeDisplaySettings = MazeDisplaySettings({
-            Settings.SHOW_FPS: True,
+            Settings.SHOW_FPS:
+                config.get_bool(EConfig.SHOW_FPS).get_value(),
             Settings.SHOW_PATHFINDING: False,
             Settings.CUSTOM_LOGO_COLOR: False,
             Settings.ANIMATE_MAZE_GENERATION:
@@ -191,7 +192,7 @@ class MazeDisplay:
         if (self.first_render):
             self.initialize()
 
-        if (self.panel.need_update):
+        if (self.panel.need_update or self.frame_count < 3):
             self.render_panel()
             self.panel.need_update = False
             self.mlx.mlx_put_image_to_window(
@@ -425,12 +426,7 @@ class MazeDisplay:
         image: Image = self.panel
         buttons: ButtonManager = self.buttons
 
-        image.draw_rectangle(
-            0, 0,
-            image.width,
-            image.height,
-            self.color_schemes.get(MazeColors.BACKGROUND)
-        )
+        image.clear(self.color_schemes.get(MazeColors.BACKGROUND))
         buttons.draw_buttons()
         self.texts.need_update = True
 

@@ -3,7 +3,8 @@ from typing import Generic, TypeVar, cast
 from .errors import (
     ConfigFormatError,
     ConfigMissingError,
-    ConfigValueError
+    ConfigValueError,
+    ConfigFileNotFoundError
 )
 
 t_coords = tuple[int, int]
@@ -23,6 +24,7 @@ class EConfig(Enum):
     MAZE_GENERATION_SPEED = 'maze_generation_speed'
     ANIMATE_MAZE_SOLVING = 'animate_maze_solving'
     MAZE_SOLVING_SPEED = 'maze_solving_speed'
+    SHOW_FPS = 'show_fps'
 
 
 class ConfigValue(Generic[T]):
@@ -154,7 +156,7 @@ class ConfigParser:
                     self.raw_data[key.lower().strip()] = (value, line_number)
 
         except FileNotFoundError:
-            print('Error: Config file not found!')
+            raise ConfigFileNotFoundError()
 
     def register(self, config_value: ConfigValue[T]) -> None:
         key: str = config_value.key.value
@@ -197,6 +199,9 @@ class Config:
         ))
         parser.register(ConfigValue[float](
             EConfig.MAZE_SOLVING_SPEED, float, 1.0, False
+        ))
+        parser.register(ConfigValue[bool](
+            EConfig.SHOW_FPS, bool, False, False
         ))
 
     def get(self, key: EConfig) -> ConfigValue:
