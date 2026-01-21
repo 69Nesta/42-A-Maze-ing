@@ -8,7 +8,7 @@ class AnimationState:
         self.max_step: int = max_step
         self.index: int = 0
 
-    def start(self, current_time) -> None:
+    def start(self, current_time: float) -> None:
         self.started = True
         self.finished = False
         self.last_update_time = current_time
@@ -20,7 +20,7 @@ class AnimationState:
         self.last_update_time = 0.0
         self.started_at = self.last_update_time
 
-    def update(self, current_time) -> bool:
+    def update(self, current_time: float) -> bool:
         if not self.started or self.finished:
             return False
         elapsed_time = current_time - self.started_at

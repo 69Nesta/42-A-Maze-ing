@@ -1,5 +1,5 @@
 from typing import Generator
-from .algo_selector import AlgoSelector, EAlgo
+from .algo_selector import AlgoSelector, EAlgo, Algo
 from .direction import Direction
 from .cell import Cell
 from .config import Config, EConfig
@@ -61,15 +61,15 @@ class MazeGenerator:
         if (seed_value != 0):
             seed(seed_value)
 
-    def init_grid(self):
+    def init_grid(self) -> None:
         self.grid = [
             [Cell(x, y) for x in range(self.width)] for y in range(self.height)
         ]
 
-    def init_path(self):
+    def init_path(self) -> None:
         self.path = []
 
-    def init_generate_order(self):
+    def init_generate_order(self) -> None:
         self.generate_order = []
 
     def get_cell(self, x: int, y: int) -> Cell:
@@ -108,7 +108,7 @@ class MazeGenerator:
             grid.append(direction)
         return '\n'.join(grid) + '\n'
 
-    def import_maze(self, data: str):
+    def import_maze(self, data: str) -> None:
         self.init_grid()
         lines: list[str] = data.strip().splitlines()
         wall_data: list[str] = lines[:-3]
@@ -177,7 +177,7 @@ class MazeGenerator:
             raise IndexError("Path step out of bounds")
         return self.path[:step]
 
-    def generate(self):
+    def generate(self) -> None:
         sx, sy = self.start
         ex, ey = self.end
 
@@ -188,7 +188,10 @@ class MazeGenerator:
         self.init_path()
         self.display_logo()
 
-        self.generate_order += self.algo.get().create(self.grid, sx, sy)
+        algo: Algo | None = self.algo.get()
+        if algo is None:
+            raise ValueError("No algorithm selected for maze generation")
+        self.generate_order += algo.create(self.grid, sx, sy)
         self.undo_perfect(self.grid)
         self.check_logo()
         self.generate_order_size = len(self.generate_order)
@@ -269,12 +272,12 @@ class MazeGenerator:
 
         return []
 
-    def undo_perfect(self, grid: t_grid):
-        available = []
+    def undo_perfect(self, grid: t_grid) -> None:
+        available: list[Cell] = []
+
         for row in self.grid:
             for cell in row:
-
-                nb_wall = 0
+                nb_wall: int = 0
                 for wall in cell.walls:
                     if cell.walls[wall] is True:
                         nb_wall += 1
@@ -284,43 +287,49 @@ class MazeGenerator:
                    and cell.y >= 1
                    and cell.y < self.height - 1):
                     available.append(cell)
-        available_iteration = int(len(available) * 0.3)
+
+        available_iteration: int = int(len(available) * 0.3)
         for _ in range(available_iteration):
-            current_cell = available.pop(randint(0, len(available) - 1))
+            current_cell: Cell = available.pop(randint(0, len(available) - 1))
+
             for wall in current_cell.walls:
                 if current_cell.walls[wall] is False:
-                    direction = wall
+                    direction: Direction = wall
+
             new_x, new_y = current_cell.x, current_cell.y
-            if direction == Direction.NORTH:
-                direction = Direction.SOUTH
-                new_y += 1
+            match direction:
+                case Direction.NORTH:
+                    direction = Direction.SOUTH
+                    new_y += 1
 
-            elif direction == Direction.SOUTH:
-                direction = Direction.NORTH
-                new_y -= 1
+                case Direction.SOUTH:
+                    direction = Direction.NORTH
+                    new_y -= 1
 
-            elif direction == Direction.EAST:
-                direction = Direction.WEST
-                new_x -= 1
+                case Direction.EAST:
+                    direction = Direction.WEST
+                    new_x -= 1
 
-            elif direction == Direction.WEST:
-                direction = Direction.EAST
-                new_x += 1
+                case Direction.WEST:
+                    direction = Direction.EAST
+                    new_x += 1
 
             if (not grid[new_y][new_x].is_logo
                and not current_cell.is_undo_perfect
                and not grid[new_y][new_x].is_undo_perfect):
                 current_cell.is_undo_perfect = True
                 grid[new_y][new_x].is_undo_perfect = True
-                if direction == Direction.NORTH:
-                    current_cell.del_north()
-                    grid[new_y][new_x].del_south()
-                elif direction == Direction.SOUTH:
-                    current_cell.del_south()
-                    grid[new_y][new_x].del_north()
-                elif direction == Direction.EAST:
-                    current_cell.del_east()
-                    grid[new_y][new_x].del_west()
-                elif direction == Direction.WEST:
-                    current_cell.del_west()
-                    grid[new_y][new_x].del_east()
+
+                match direction:
+                    case Direction.NORTH:
+                        current_cell.del_north()
+                        grid[new_y][new_x].del_south()
+                    case Direction.SOUTH:
+                        current_cell.del_south()
+                        grid[new_y][new_x].del_north()
+                    case Direction.EAST:
+                        current_cell.del_east()
+                        grid[new_y][new_x].del_west()
+                    case Direction.WEST:
+                        current_cell.del_west()
+                        grid[new_y][new_x].del_east()

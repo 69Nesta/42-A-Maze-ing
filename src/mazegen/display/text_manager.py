@@ -1,3 +1,4 @@
+from typing import Any
 from mlx import Mlx
 
 
@@ -11,10 +12,10 @@ class Text:
 
 
 class TextManager:
-    def __init__(self, mlx: Mlx, mlx_ptr, win_ptr) -> None:
-        self.mlx = mlx
-        self.mlx_ptr = mlx_ptr
-        self.win_ptr = win_ptr
+    def __init__(self, mlx: Mlx, mlx_ptr: Any, win_ptr: Any) -> None:
+        self.mlx: Mlx = mlx
+        self.mlx_ptr: Any = mlx_ptr
+        self.win_ptr: Any = win_ptr
         self.texts: dict[str, Text] = {}
         self.need_update: bool = True
 
@@ -28,7 +29,7 @@ class TextManager:
                     ) -> Text | None:
         if self.text_exists(id):
             return None
-        text = Text(x, y, color, content)
+        text: Text = Text(x, y, color, content)
         self.texts[id] = text
         self.need_update = True
         return text

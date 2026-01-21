@@ -5,7 +5,7 @@ from random import randint
 
 
 class Prim(Algo):
-    def __init__(self, width: int, height: int, end: t_point):
+    def __init__(self, width: int, height: int, end: t_point) -> None:
         super().__init__(width, height, end)
 
     def create(self, grid: t_grid, x: int, y: int) -> list[Coords]:
@@ -18,7 +18,7 @@ class Prim(Algo):
             next_cell = next.pop(randint(0, len(next)-1))
             if next_cell.x != self.end[0] or next_cell.y != self.end[1]:
 
-                def try_north():
+                def try_north() -> None:
                     if next_cell.y - 1 >= 0:
                         new = grid[next_cell.y - 1][next_cell.x]
                         if not new.is_next and new.is_logo is False:
@@ -28,7 +28,7 @@ class Prim(Algo):
                             next_cell.del_north()
                             new.del_south()
 
-                def try_south():
+                def try_south() -> None:
                     if next_cell.y + 1 < self.height:
                         new = grid[next_cell.y + 1][next_cell.x]
                         if not new.is_next and new.is_logo is False:
@@ -38,7 +38,7 @@ class Prim(Algo):
                             next_cell.del_south()
                             new.del_north()
 
-                def try_west():
+                def try_west() -> None:
                     if next_cell.x - 1 >= 0:
                         new = grid[next_cell.y][next_cell.x - 1]
                         if not new.is_next and new.is_logo is False:
@@ -48,7 +48,7 @@ class Prim(Algo):
                             next_cell.del_west()
                             new.del_east()
 
-                def try_east():
+                def try_east() -> None:
                     if next_cell.x + 1 < self.width:
                         new = grid[next_cell.y][next_cell.x + 1]
                         if not new.is_next and new.is_logo is False:

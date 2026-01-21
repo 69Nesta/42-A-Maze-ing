@@ -23,9 +23,11 @@ class AlgoSelector:
             self.current_algo = key
 
     def get(self) -> Algo | None:
+        if self.current_algo is None:
+            return None
         return self.algo.get(self.current_algo)
 
-    def get_algo(self, key: EAlgo) -> Algo:
+    def get_algo(self, key: EAlgo) -> Algo | None:
         return self.algo.get(key)
 
     def set_current_algo(self, key: EAlgo) -> None:

@@ -29,7 +29,7 @@ class MazeDisplaySettings:
     def __init__(self, defaults: dict[Settings, bool] = {}):
         self.settings = defaults
 
-    def set(self, key: Settings, value: bool):
+    def set(self, key: Settings, value: bool) -> None:
         self.settings[key] = value
 
     def get(self, key: Settings) -> bool | None:
@@ -163,7 +163,7 @@ class MazeDisplay:
         self.mlx.mlx_key_hook(self.win_ptr, self.key_hook, None)
         self.mlx.mlx_mouse_hook(self.win_ptr, self.mouse_hook, None)
 
-    def close(self, _) -> int:
+    def close(self, _: None) -> int:
         try:
             self.panel.destroy(self.mlx, self.mlx_ptr)
             self.maze_image.destroy(self.mlx, self.mlx_ptr)
@@ -172,7 +172,7 @@ class MazeDisplay:
             try:
                 self.mlx.mlx_loop_exit(self.mlx_ptr)
             except Exception:
-                pass
+                return 0
         return 0
 
     def run(self) -> None:
@@ -180,7 +180,7 @@ class MazeDisplay:
         self.mlx.mlx_loop_hook(self.mlx_ptr, self.render, None)
         self.mlx.mlx_loop(self.mlx_ptr)
 
-    def render(self, _) -> int:
+    def render(self, _: None) -> int:
         current_time = time.time()
         elapsed_time = current_time - self.last_time
         fps = 1.0 / elapsed_time if elapsed_time > 0 else 0.0
@@ -474,7 +474,7 @@ class MazeDisplay:
 
         self.draw_start_end()
 
-    def draw_maze_animation(self, current_time) -> None:
+    def draw_maze_animation(self, current_time: float) -> None:
         maze: MazeGenerator = self.maze
 
         logo_color: int = self.color_schemes.get(MazeColors.LOGO)
@@ -776,11 +776,11 @@ class MazeDisplay:
             color
         )
 
-    def mouse_hook(self, btn: int, x: int, y: int, _) -> int:
+    def mouse_hook(self, btn: int, x: int, y: int, _: int) -> int:
         self.buttons.on_click(x - self.WIDTH_MAZE, y)
         return 0
 
-    def key_hook(self, keycode: int, _) -> int:
+    def key_hook(self, keycode: int, _: int) -> int:
         match keycode:
             case 65307:  # ESC key
                 self.debug.print("Escape key pressed. Exiting...")
