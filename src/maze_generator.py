@@ -200,11 +200,11 @@ class MazeGenerator:
             for j in range(len(self.logo[i])):
                 x = int(self.center_x) + j
                 y = int(self.center_y) + i
-                if (x <= 1) or (y <= 1):
-                    raise(ValueError("The logo is to big"))
+                if (x <= 1) or (y <= 1) or (x >= self.width - 2):
+                    raise (ValueError("The logo is to big"))
                 if self.logo[i][j] == 1:
                     if self.end == (x, y) or self.start == (x, y):
-                        raise(ValueError("The logo can t be on the exit or the start"))
+                        raise (ValueError("The logo can t be on the exit or the start"))
                     self.grid[y][x].is_logo = True
                     self.generate_order.append(Coords(x, y))
                 else:
