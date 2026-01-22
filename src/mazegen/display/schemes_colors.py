@@ -1,3 +1,10 @@
+"""Color schemes and color identifiers for the maze display.
+
+This module defines a small `MazeColors` Enum used as keys for
+color dictionaries and `MazeSchemesColors`, a container holding a list
+of predefined color schemes and convenience accessors.
+"""
+
 from enum import Enum
 
 
@@ -12,6 +19,15 @@ class MazeColors(Enum):
 
 class MazeSchemesColors:
     def __init__(self) -> None:
+        """Container for multiple color schemes and access helpers.
+
+        Attributes:
+            schemes: List of color mapping dictionaries keyed by
+                `MazeColors` values.
+            current_scheme: Index of the currently active color scheme.
+            total_schemes: Cached number of available schemes.
+        """
+
         self.schemes: list[dict[MazeColors, int]] = [
             # Original scheme purple-ish
             {
@@ -78,7 +94,27 @@ class MazeSchemesColors:
         self.total_schemes: int = len(self.schemes)
 
     def get(self, color: MazeColors) -> int:
+        """Return the integer color value for the given MazeColors key
+        in the currently active scheme.
+
+        Args:
+            color: A MazeColors enum member identifying which color to
+                retrieve from the active scheme.
+
+        Returns:
+            The packed integer color value for the requested key.
+        """
+
         return self.schemes[self.current_scheme][color]
 
     def next_scheme(self) -> None:
+        """Advance to the next available color scheme.
+
+        Wraps around to the first scheme when the end of the list is
+        reached.
+
+        Returns:
+            None
+        """
+
         self.current_scheme = (self.current_scheme + 1) % self.total_schemes

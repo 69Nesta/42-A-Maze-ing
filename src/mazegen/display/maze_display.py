@@ -1,5 +1,14 @@
+"""Display utilities for rendering the generated maze and UI panel.
+
+This module provides classes and functions to render a maze using the
+MLX backend, manage display settings, and handle user interactions such as
+keyboard and mouse events. The primary class, :class:`MazeDisplay`, owns
+images for the maze, path visualization and UI panel and coordinates
+animation and rendering passes.
+"""
+
 import time
-from mlx import Mlx
+from mlx import Mlx  # type: ignore[import-untyped]
 from enum import Enum
 from ..algorithms.algo_selector import EAlgo
 from ..config import Config, EConfig
@@ -27,17 +36,48 @@ class Settings(Enum):
 
 class MazeDisplaySettings:
     def __init__(self, defaults: dict[Settings, bool] = {}):
+        """Container for boolean display flags.
+
+        Args:
+            defaults (dict[Settings, bool]): Initial mapping of settings to
+                boolean values. Keys are members of :class:`Settings`.
+        """
+
         self.settings = defaults
 
     def set(self, key: Settings, value: bool) -> None:
+        """Set the boolean value for a display setting.
+
+        Args:
+            key (Settings): The setting to update.
+            value (bool): The boolean value to set.
+        """
+
         self.settings[key] = value
 
     def get(self, key: Settings) -> bool | None:
+        """Retrieve the value of a display setting.
+
+        Args:
+            key (Settings): The setting to lookup.
+
+        Returns:
+            bool | None: The boolean value if present, otherwise ``None``.
+        """
+
         if key in self.settings:
             return self.settings[key]
         return None
 
     def toggle(self, key: Settings) -> None:
+        """Toggle a boolean setting in-place.
+
+        The toggle only occurs if the key exists and its value is a boolean.
+
+        Args:
+            key (Settings): The setting to toggle.
+        """
+
         if key in self.settings and isinstance(self.settings[key], bool):
             self.settings[key] = not self.settings[key]
 
@@ -51,6 +91,18 @@ class MazeDisplay:
     WIDTH_PANEL: int
 
     def __init__(self, maze: MazeGenerator, config: Config) -> None:
+        """Create a display surface for a maze and UI panel.
+
+        Args:
+            maze (MazeGenerator): The maze generator instance to render.
+            config (Config): Configuration object providing display options
+                such as animation speeds and initial flags.
+
+        Raises:
+            DisplayMazeToBig: If the computed cell size is zero or if the
+                allocated image is smaller than the logical maze dimensions.
+        """
+
         self.config: Config = config
         self.debug: Debug = Debug(config)
         self.mlx: Mlx = Mlx()
@@ -164,6 +216,18 @@ class MazeDisplay:
         self.mlx.mlx_mouse_hook(self.win_ptr, self.mouse_hook, None)
 
     def close(self, _: None) -> int:
+        """Close and clean up display resources.
+
+        This method destroys images and the MLX window and exits the MLX
+        loop. It is safe to call from event handlers.
+
+        Args:
+            _ (None): Unused parameter (signature demanded by MLX hook API).
+
+        Returns:
+            int: Always returns 0 (MLX hook convention).
+        """
+
         try:
             self.panel.destroy(self.mlx, self.mlx_ptr)
             self.maze_image.destroy(self.mlx, self.mlx_ptr)
@@ -176,11 +240,31 @@ class MazeDisplay:
         return 0
 
     def run(self) -> None:
+        """Start the MLX rendering loop for the display.
+
+        The loop registers the :meth:`render` method as a loop hook and
+        then enters the MLX event loop. This method blocks until the window
+        is closed.
+        """
+
         self.start_time = time.time()
         self.mlx.mlx_loop_hook(self.mlx_ptr, self.render, None)
         self.mlx.mlx_loop(self.mlx_ptr)
 
     def render(self, _: None) -> int:
+        """Render one frame and update images as needed.
+
+        This method is intended to be registered with MLX as a loop hook.
+        It updates FPS counters, the UI panel, background, maze image and
+        optional pathfinding overlay in a single pass.
+
+        Args:
+            _ (None): Unused parameter required by the MLX loop hook API.
+
+        Returns:
+            int: Always returns 0 (MLX hook convention).
+        """
+
         current_time = time.time()
         elapsed_time = current_time - self.last_time
         fps = 1.0 / elapsed_time if elapsed_time > 0 else 0.0
@@ -254,6 +338,12 @@ class MazeDisplay:
         return 0
 
     def render_fps(self, fps: float) -> None:
+        """Update FPS display on the background image.
+
+        Args:
+            fps (float): Current frames-per-second estimate.
+        """
+
         if not self.settings.get(Settings.SHOW_FPS):
             return
         self.background_image.draw_rectangle(
@@ -268,6 +358,13 @@ class MazeDisplay:
         )
 
     def render_background(self) -> None:
+        """Clear and redraw the background image if it requires update.
+
+        The background is cleared to the current background color from the
+        active color scheme. This method is a no-op if the image does not
+        indicate it needs an update.
+        """
+
         self.debug.print("Rendering background...")
         image: Image = self.background_image
 
@@ -276,6 +373,13 @@ class MazeDisplay:
         image.clear(self.color_schemes.get(MazeColors.BACKGROUND))
 
     def initialize(self) -> None:
+        """Initialize UI elements on the side panel.
+
+        This sets up selectors, buttons and color pickers and the initial
+        text entry for the FPS counter when enabled. It positions UI
+        components relative to the panel size.
+        """
+
         nb_elements = 6
         nb_buttons = 4
 
@@ -418,6 +522,12 @@ class MazeDisplay:
             )
 
     def render_panel(self) -> None:
+        """Render the UI panel and mark text manager as needing update.
+
+        This clears the panel background, draws all buttons/selectors and
+        requests the text manager to refresh displayed texts.
+        """
+
         self.debug.print("Rendering panel...")
         image: Image = self.panel
         buttons: ButtonManager = self.buttons
@@ -427,6 +537,13 @@ class MazeDisplay:
         self.texts.need_update = True
 
     def render_maze(self, current_time: float) -> None:
+        """Render the maze either as a full draw or animated generation.
+
+        Args:
+            current_time (float): Current timestamp, used by animations to
+                compute frame advancement.
+        """
+
         settings: MazeDisplaySettings = self.settings
 
         if (settings.get(Settings.ANIMATE_MAZE_GENERATION) and
@@ -436,6 +553,12 @@ class MazeDisplay:
             self.draw_maze()
 
     def render_pathfinding(self, current_time: float) -> None:
+        """Render the pathfinding overlay either animated or fully.
+
+        Args:
+            current_time (float): Current timestamp for animation updates.
+        """
+
         settings: MazeDisplaySettings = self.settings
 
         if (not settings.get(Settings.SHOW_PATHFINDING)):
@@ -447,6 +570,13 @@ class MazeDisplay:
             self.draw_pathfinding()
 
     def draw_maze(self) -> None:
+        """Draw a static snapshot of the entire maze to the maze image.
+
+        The method clears the maze image and draws all cell borders and fills
+        according to the active color scheme and custom logo color (when
+        enabled). Start and end cells are also drawn.
+        """
+
         image: Image = self.maze_image
         maze: MazeGenerator = self.maze
 
@@ -475,6 +605,13 @@ class MazeDisplay:
         self.draw_start_end()
 
     def draw_maze_animation(self, current_time: float) -> None:
+        """Advance and draw one step of the maze generation animation.
+
+        Args:
+            current_time (float): Current timestamp used to progress the
+                animation state.
+        """
+
         maze: MazeGenerator = self.maze
 
         logo_color: int = self.color_schemes.get(MazeColors.LOGO)
@@ -504,6 +641,12 @@ class MazeDisplay:
             self.maze_image.need_update = True
 
     def redraw_middle_maze_animation(self) -> None:
+        """Redraw the maze image up to the current animation index.
+
+        Useful when the color scheme changes while an animation is active so
+        that previously drawn steps are rendered with the new colors.
+        """
+
         maze: MazeGenerator = self.maze
         image: Image = self.maze_image
 
@@ -532,6 +675,17 @@ class MazeDisplay:
                 y: int,
                 direction: Direction
             ) -> None:
+        """Draw a pathfinding marker for a single maze cell.
+
+        The marker indicates the direction of the path step and draws a
+        start/end overlay when the cell matches those positions.
+
+        Args:
+            x (int): Maze cell x coordinate.
+            y (int): Maze cell y coordinate.
+            direction (Direction): Direction of the step inside the cell.
+        """
+
         image: Image = self.path_image
         cellsize: int = self.cell_size
         x0, y0, x1, y1, _, _ = self.get_cell_pos(x, y)
@@ -579,6 +733,10 @@ class MazeDisplay:
             )
 
     def draw_pathfinding(self) -> None:
+        """Draw the full pathfinding overlay up to the current animation
+        index.
+        """
+
         maze: MazeGenerator = self.maze
 
         for idx, step in enumerate(maze.path):
@@ -590,6 +748,13 @@ class MazeDisplay:
         self.draw_start_end()
 
     def draw_pathfinding_animate(self, current_time: float) -> None:
+        """Advance and draw one step of the pathfinding animation.
+
+        Args:
+            current_time (float): Current timestamp used to progress the
+                pathfinding animation state.
+        """
+
         maze: MazeGenerator = self.maze
         animation: AnimationState = self.path_animation
 
@@ -613,6 +778,16 @@ class MazeDisplay:
                 cell: Cell,
                 wall_color: int, logo_color: int
             ) -> None:
+        """Draw a single cell as part of the generation animation.
+
+        Args:
+            x (int): Cell x coordinate.
+            y (int): Cell y coordinate.
+            cell (Cell): The logical cell object containing wall information.
+            wall_color (int): Color used to draw walls.
+            logo_color (int): Color used to fill full cells (logo).
+        """
+
         self.draw_cell_border(
             cell,
             x,
@@ -631,26 +806,44 @@ class MazeDisplay:
                 self.draw_end()
 
     def draw_start(self) -> None:
+        """Draw the start cell using the configured start color."""
+
         maze: MazeGenerator = self.maze
 
         sx, sy = maze.start
         self.draw_cell_fill(sx, sy, self.color_schemes.get(MazeColors.START))
 
     def draw_end(self) -> None:
+        """Draw the end cell using the configured end color."""
+
         maze: MazeGenerator = self.maze
 
         ex, ey = maze.end
         self.draw_cell_fill(ex, ey, self.color_schemes.get(MazeColors.END))
 
     def draw_start_end(self) -> None:
+        """Draw both the start and end cells."""
+
         self.draw_start()
         self.draw_end()
 
     def change_algo(self, algo: EAlgo) -> None:
+        """Switch the maze generation algorithm.
+
+        Args:
+            algo (EAlgo): Algorithm enum value to select.
+        """
+
         self.debug.print('Changing maze algorithm...')
         self.maze.algo.set_current_algo(algo)
 
     def generate_new_maze(self) -> None:
+        """Generate a fresh maze and reinitialize animations/images.
+
+        This triggers a new generation on the attached :class:`MazeGenerator`.
+        Animation state and image buffers are reset to reflect the new maze.
+        """
+
         self.debug.print('Generating new maze...')
         settings: MazeDisplaySettings = self.settings
         self.maze.generate()
@@ -669,6 +862,12 @@ class MazeDisplay:
             self.path_image.need_update = True
 
     def change_color_scheme(self) -> None:
+        """Advance to the next color scheme and refresh images.
+
+        If animations are active this method will redraw the animated
+        content to match the new palette.
+        """
+
         self.debug.print('Changing color scheme...')
         self.color_schemes.next_scheme()
         if (self.settings.get(Settings.ANIMATE_MAZE_GENERATION)
@@ -682,6 +881,12 @@ class MazeDisplay:
         self.background_image.need_update = True
 
     def toggle_pathfinding(self) -> None:
+        """Toggle visibility of the pathfinding overlay.
+
+        If the maze generation animation is running the toggle is ignored to
+        prevent visual conflict.
+        """
+
         self.debug.print('Toggling pathfinding...')
         settings: MazeDisplaySettings = self.settings
         if (settings.get(Settings.ANIMATE_MAZE_GENERATION)
@@ -697,10 +902,23 @@ class MazeDisplay:
             self.path_image.need_update = True
 
     def toggle_setting(self, setting: Settings) -> None:
+        """Toggle an arbitrary display setting and mark the maze image for
+        update.
+
+        Args:
+            setting (Settings): The display setting to toggle.
+        """
+
         self.settings.toggle(setting)
         self.maze_image.need_update = True
 
     def set_custom_logo_color(self, color: int) -> None:
+        """Set a custom color to be used for logo/full cells.
+
+        Args:
+            color (int): ARGB integer color used to fill logo cells.
+        """
+
         self.debug.print('Setting custom logo color...')
         self.custom_logo_color = color
         self.settings.set(Settings.CUSTOM_LOGO_COLOR, True)
@@ -710,6 +928,8 @@ class MazeDisplay:
             self.redraw_middle_maze_animation()
 
     def exit_display(self) -> None:
+        """Exit the display by closing the window and cleaning resources."""
+
         self.debug.print('Exiting display...')
         self.close(None)
 
@@ -718,6 +938,21 @@ class MazeDisplay:
         x: int,
         y: int,
     ) -> tuple[int, int, int, int, int, int]:
+        """Compute pixel coordinates for the given maze cell.
+
+        The returned tuple contains six integers describing the top-left,
+        center and bottom-right coordinates of the cell in the maze image
+        coordinate space: ``(x0, y0, x1, y1, x2, y2)``.
+
+        Args:
+            x (int): Maze cell x coordinate.
+            y (int): Maze cell y coordinate.
+
+        Returns:
+            tuple[int, int, int, int, int, int]: Pixel coordinates for the
+                cell used for drawing borders and fills.
+        """
+
         cell_size: int = self.cell_size
 
         x0: int = x * cell_size * 2
@@ -737,6 +972,15 @@ class MazeDisplay:
         y: int,
         color: int
     ) -> None:
+        """Draw the borders (walls) of a single maze cell.
+
+        Args:
+            cell (Cell): Logical cell with wall information.
+            x (int): Cell x coordinate.
+            y (int): Cell y coordinate.
+            color (int): ARGB color value used to draw walls.
+        """
+
         image: Image = self.maze_image
         cell_size: int = self.cell_size
         x0, y0, _, _, x2, y2 = self.get_cell_pos(x, y)
@@ -756,6 +1000,14 @@ class MazeDisplay:
         y: int,
         color: int
     ) -> None:
+        """Fill the central square of a maze cell with a color.
+
+        Args:
+            x (int): Cell x coordinate.
+            y (int): Cell y coordinate.
+            color (int): ARGB color value used to fill the cell.
+        """
+
         image: Image = self.maze_image
         cell_size: int = self.cell_size
         _, _, x1, y1, _, _ = self.get_cell_pos(x, y)
@@ -769,10 +1021,34 @@ class MazeDisplay:
         )
 
     def mouse_hook(self, btn: int, x: int, y: int, _: int) -> int:
+        """MLX mouse hook forwarding clicks to the buttons manager.
+
+        Args:
+            btn (int): Mouse button code (unused).
+            x (int): X coordinate of the click relative to the window.
+            y (int): Y coordinate of the click relative to the window.
+            _ (int): Unused fourth parameter from MLX API.
+
+        Returns:
+            int: Always 0 (MLX hook convention).
+        """
+
         self.buttons.on_click(x - self.WIDTH_MAZE, y)
         return 0
 
     def key_hook(self, keycode: int, _: int) -> int:
+        """Handle key events from MLX and trigger actions.
+
+        Currently only the ESC key is handled which closes the display.
+
+        Args:
+            keycode (int): Platform-specific key code.
+            _ (int): Unused second parameter from MLX API.
+
+        Returns:
+            int: Always 0 (MLX hook convention).
+        """
+
         match keycode:
             case 65307:  # ESC key
                 self.debug.print("Escape key pressed. Exiting...")

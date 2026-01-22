@@ -1,4 +1,12 @@
-from mlx import Mlx
+"""Utilities for drawing into an MLX-backed image buffer.
+
+This module provides the lightweight Image wrapper used by the maze
+display code. The Image class exposes convenience drawing primitives
+that operate directly on the MLX pixel buffer: drawing pixels,
+rectangles, lines and a small color selector rendering helper.
+"""
+
+from mlx import Mlx  # type: ignore[import-untyped]
 
 
 class Image:
@@ -7,6 +15,22 @@ class Image:
                  mlx_ptr: int,
                  width: int,
                  height: int) -> None:
+        """Create a new Image wrapper around an MLX image buffer.
+
+        This constructor allocates a new MLX image and captures the
+        internal buffer address and metadata required by the drawing
+        helpers.
+
+        Args:
+            mlx: The MLX binding module/object used to create images.
+            mlx_ptr: MLX context pointer (platform-specific integer).
+            width: Width of the image in pixels.
+            height: Height of the image in pixels.
+
+        Returns:
+            None
+        """
+
         self.width: int = width
         self.height: int = height
         self.img: int = mlx.mlx_new_image(mlx_ptr, width, height)
@@ -20,9 +44,33 @@ class Image:
         self.need_update: bool = True
 
     def destroy(self, mlx: Mlx, mlx_ptr: int) -> None:
+        """Destroy the underlying MLX image resource.
+
+        Args:
+            mlx: The MLX binding module/object used to destroy images.
+            mlx_ptr: MLX context pointer (platform-specific integer).
+
+        Returns:
+            None
+        """
+
         mlx.mlx_destroy_image(mlx_ptr, self.img)
 
     def put_pixel(self, x: int, y: int, color: int) -> None:
+        """Write a single pixel into the image buffer.
+
+        Args:
+            x: X coordinate of the pixel.
+            y: Y coordinate of the pixel.
+            color: Packed integer representing the pixel color.
+
+        Raises:
+            IndexError: If the computed buffer offset is out-of-bounds.
+
+        Returns:
+            None
+        """
+
         bpp: int = self.bits_per_pixel // 8
         offset: int = y * self.size_line + x * bpp
 
@@ -36,6 +84,19 @@ class Image:
                        x: int, y: int,
                        w: int, h: int,
                        color: int) -> None:
+        """Draw a filled rectangle into the image buffer.
+
+        Args:
+            x: X coordinate of the rectangle's top-left corner.
+            y: Y coordinate of the rectangle's top-left corner.
+            w: Width of the rectangle in pixels.
+            h: Height of the rectangle in pixels.
+            color: Packed integer color used to fill the rectangle.
+
+        Returns:
+            None
+        """
+
         bpp: int = self.bits_per_pixel // 8
         color_bytes: bytes = color.to_bytes(bpp, 'little')
 
@@ -49,6 +110,21 @@ class Image:
             self.addr[offset:offset + w * bpp] = rect_row
 
     def draw_color_selector(self, x: int, y: int, size: int) -> None:
+        """Render a small color gradient square used by color selectors.
+
+        This helper paints a size x size gradient where the red and green
+        channels vary across X/Y and the blue channel is computed to give
+        a visually useful palette.
+
+        Args:
+            x: X coordinate of the selector's top-left corner.
+            y: Y coordinate of the selector's top-left corner.
+            size: Size of the square in pixels.
+
+        Returns:
+            None
+        """
+
         for j in range(size):
             for i in range(size):
                 t = 255
@@ -62,6 +138,20 @@ class Image:
                   x0: int, y0: int,
                   x1: int, y1: int,
                   color: int) -> None:
+        """Draw a line between (x0, y0) and (x1, y1) using Bresenham's
+        algorithm.
+
+        Args:
+            x0: Starting X coordinate.
+            y0: Starting Y coordinate.
+            x1: Ending X coordinate.
+            y1: Ending Y coordinate.
+            color: Packed integer color used for the line.
+
+        Returns:
+            None
+        """
+
         dx: int = abs(x1 - x0)
         dy: int = abs(y1 - y0)
         sx: int = 1 if x0 < x1 else -1
@@ -81,6 +171,16 @@ class Image:
                 y0 += sy
 
     def get_pixel(self, x: int, y: int) -> int:
+        """Return the packed integer color at the specified pixel.
+
+        Args:
+            x: X coordinate of the pixel.
+            y: Y coordinate of the pixel.
+
+        Returns:
+            The packed integer color value read from the buffer.
+        """
+
         bytes_per_pixel: int = self.bits_per_pixel // 8
         offset: int = (y * self.size_line) + (x * bytes_per_pixel)
         pixel_bytes: memoryview[int] = self.addr[
@@ -89,6 +189,15 @@ class Image:
         return int.from_bytes(pixel_bytes, 'little')
 
     def clear(self, color: int) -> None:
+        """Fill the whole image with a single color.
+
+        Args:
+            color: Packed integer color used to clear the image.
+
+        Returns:
+            None
+        """
+
         self.addr[:] = \
             color.to_bytes(self.bits_per_pixel // 8, 'little') \
             * (self.width * self.height)
