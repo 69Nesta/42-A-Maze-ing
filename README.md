@@ -1,135 +1,267 @@
-*This project has been created as partof the 42 curriculum by mthetcha, rpetit.*
+*This project has been created as part of the 42 curriculum by mthetcha, rpetit.*
 
-# Description
+# A-Maze-ing
 
-This project is based on algorithms and visual rendering using MLX. The project retrieves a configuration to generate a maze, displays it, and then generates the solution to connect the entrance to the exit.
+This project is a Python package and application to generate, display and solve mazes with a graphical UI using the MLX backend. It supports multiple maze generation algorithms (Backtracking and Prim), preserves a text "logo" inside the maze, can optionally produce imperfect mazes (loops), and animates both generation and solving.
 
+Goals:
+- Provide a small reusable maze-generation library with a display front-end.
+- Produce visually pleasing mazes that can keep a logo (the 42 logo) centered and protected.
+- Expose a simple program entry point and an importable API for reuse in other Python code.
 
-# Instructions
+## Instructions
 
-Use `make run` to compile all and start the project
+Requirements (tested on Linux): Python 3.10+, `make`, a working X11/display for MLX.
 
-## Structure
+Quick start (recommended):
+
+1. Create & activate the virtual environment and install dependencies:
+
+```sh
+make install
+```
+
+2. Run the application with the default `config.txt`:
+
+```sh
+make run
+```
+
+Run with a custom configuration file:
+
+```sh
+source ./.venv/bin/activate
+python3 a_maze_ing.py path/to/your_config.txt
+deactivate
+```
+
+Testing & linting:
+
+```sh
+make test   # run pytest tests/tester.py
+make lint   # run flake8 and mypy checks
+```
+
+## Project structure
+
+Top-level layout (important files and directories):
+
 ```
 .
+├── README.md
 ├── Makefile
-├── a_maze_ing.py
-├── config.txt
-├── src
-│   ├── All algo and parsing Files
-│   └── diplay
-│		└── All display Files
-└── README.md
-
+├── a_maze_ing.py          # small CLI entrypoint using MazeApp
+├── config.txt            # default configuration file (example)
+├── 42logo.txt            # ASCII logo used by the generator
+├── lib/mlx-2.2-*.whl     # MLX wheel used for display
+├── src/mazegen           # main package
+│   ├── algorithms        # generation algorithms (Backtrack, Prim)
+│   ├── display           # MLX display & UI components
+│   ├── config.py         # configuration parsing helpers
+│   ├── maze_generator.py # MazeGenerator implementation
+│   ├── maze.py           # MazeApp entry wrapper
+│   └── ...               # cell, direction, types, utils
+└── tests                 # small test inputs used by CI/tester
 ```
 
-## Config.txt
-```
-# Width of the maze in cells (horizontal size)
+## Config file: keys, types and example
+
+The parser accepts a simple key = value file (case-insensitive keys). Tuples are comma-separated (no parentheses). Strings may be quoted with double quotes. Blank lines and lines starting with `#` are ignored.
+
+Recognized keys (names used in file must match the left-hand side; keys are case-insensitive):
+
+- width (int) — maze width in cells (horizontal)
+- height (int) — maze height in cells (vertical)
+- entry (two ints, x, y) — entry coordinates, e.g. `entry = 0, 0`
+- exit (two ints, x, y) — exit coordinates
+- output_file (string) — path to write exported maze (default: `maze.txt`)
+- perfect (bool) — when True, tries to keep maze "perfect" (no loops)
+- maze_seed (int) — 0 disables fixed seed (random); non-zero sets RNG seed
+- logo_file (string) — path to ASCII logo file used to mark protected cells
+- animate_maze_generation (bool)
+- maze_generation_speed (float) — animation speed multiplier (lower = faster)
+- animate_maze_solving (bool)
+- maze_solving_speed (float)
+- debug_mode (bool)
+- show_fps (bool)
+
+Example `config.txt` (the repository includes a working example):
+
+```ini
+# Example configuration
 WIDTH = 50
-
-# Height of the maze in cells (vertical size)
 HEIGHT = 34
-
-# Entry point of the maze (x, y coordinates)
-# This is where the player/solver starts
 ENTRY = 0, 0
-
-# Exit point of the maze (x, y coordinates)
-# This is where the maze is solved
 EXIT = 45, 28
-
-# File name where the generated maze will be saved
 OUTPUT_FILE = "maze.txt"
-
-# If True, generate a "perfect" maze
-# A perfect maze has exactly one path between any two points (no loops)
 PERFECT = True
-
-# Seed for the random number generator
-# Using the same seed will always generate the same maze
-# Set to None or change the number for a different maze
-# If set you cant not generate a new maze on display
 MAZE_SEED = 0
-
-# Enable or disable animation during maze generation
-# True = show generation step-by-step
-# False = generate instantly
+LOGO_FILE = "42logo.txt"
 ANIMATE_MAZE_GENERATION = True
-
-# Speed of the maze generation animation in milliseconds
-# Higher value = slower animation
-# Lower value = faster animation
 MAZE_GENERATION_SPEED = 10
-
-# Enable or disable animation during maze solving
-# True = show the solving process step-by-step
-# False = solve instantly
 ANIMATE_MAZE_SOLVING = True
-
-# Speed of the maze solving animation in milliseconds
-# Higher value = slower animation
-# Lower value = faster animation
 MAZE_SOLVING_SPEED = 10
-
-# Enable or disable debug mode
-DEBUG_MODE = False
-
-# Show fps 
+DEBUG_MODE = True
 SHOW_FPS = True
 ```
 
-# Resources
+Notes on `maze_seed`: a value of 0 means "do not fix the seed" and the generator will behave non-deterministically; any non-zero integer will call random.seed(...) and produce repeatable mazes for the same seed and config.
 
-- **Online documentations** : General research and algorithm understanding
-- **Peer-to-peer learning** : Code reviews and discussions
-- **Visualization maze generation** : https://professor-l.github.io/mazes/
-- **Understanding maze generation** : https://en.wikipedia.org/wiki/Maze_generation_algorithm
+## Maze generation algorithm(s)
 
-# Technical explanation
+This project implements two algorithms:
 
-### Backtracking Generation
+- Backtracking (recursive backtracker / depth-first carve) — implemented in `src/mazegen/algorithms/algo_backtrack.py`. This is the default algorithm used by the UI. It tends to produce long winding corridors and good visual results when combined with the logo-preserving layout.
+- Prim's algorithm (randomized Prim variant) — implemented in `src/mazegen/algorithms/algo_prim.py`. Produces mazes with different texture (more short corridors and more branching).
 
-Move a head randomly from the start to the exit, creating its path by breaking walls. If the head is blocked in a dead end, the algorithm moves backward until it can move again and generate the rest of the maze. *(by mthetcha)*
+Why both / why choose Backtracking by default:
+- Backtracking is simple, fast and produces organic-looking mazes that play nicely with the logo constraint (fewer short isolated pockets). The UI exposes an algorithm selector so you can switch to Prim interactively to see the difference.
 
-### Prim Generation
+Imperfect mazes (introducing loops): after generating a "perfect" maze the code can optionally open some dead-ends (30% of dead-ends) to create loops and improve playability/visual variety. See `MazeGenerator.undo_perfect`.
 
-This algorithm generates a maze from a starting cell by randomly exploring neighboring cells that have not yet been visited, removing the walls between connected cells as it goes.
-It maintains a list of cells “to be explored” and continues until all accessible cells have been incorporated into the maze. *(by mthetcha)*
+## Features
 
+The application and library expose the following features (UI elements and programmatic capabilities):
 
-#### **We chose these algorithms because they allow us to keep the 42 logo and generate around it, unlike other algorithms that go over the 42 logo.**
+- Custom logo import: provide an ASCII logo file (see `42logo.txt`) where spaces or `0` are treated as background and other characters mark logo pixels. The logo is automatically centered and protected from carving.
+- Color picker / custom logo color: a color selector in the side panel lets you pick a color from the palette to tint the logo when rendering.
+- Algorithm switch: the side panel contains a selector to switch between Backtracker and Prim algorithms at runtime.
+- Regenerate Maze button: regenerate the maze with the current configuration and settings.
+- Change Color Scheme button: cycle through built-in color schemes for maze, background and UI.
+- Toggle Pathfinding button: display or hide the computed solution path overlay.
+- Export / Import: the generator writes a text `OUTPUT_FILE` (see "Exported maze format") and `MazeGenerator.import_maze()` can re-load such files programmatically.
+- Animation controls: animated generation and solving with configurable per-step speed (set in config). The display uses `AnimationState` to advance animation frames.
+- Deterministic seed: set `MAZE_SEED` in the config to a non-zero integer to produce repeatable mazes.
+- Imperfect mazes: optional post-processing opens a fraction of dead-ends to create loops and more interesting mazes.
+- Headless / programmatic usage: import `Config` and `MazeGenerator` to generate mazes without starting the MLX display (useful for batch generation or tests).
+- FPS counter: optionally show a live FPS counter (controlled by the config `SHOW_FPS`).
+- Mouse-driven UI: click side-panel buttons, selectors and the color selector to control the app (the Escape key closes the window).
 
+Resources and reading:
 
-### Algorithm that makes the maze imperfect
+- MLX (MiniLibX) doc: https://harm-smits.github.io/42docs/libs/minilibx
+- Maze generation overview: https://en.wikipedia.org/wiki/Maze_generation_algorithm
+- Maze visualizations: https://professor-l.github.io/mazes/
 
-The algorithm scans the entire generated maze to find dead ends, extending 30% of them to create loops while maintaining an aesthetic maze that does not resemble a grid. *(by mthetcha)*
+AI usage:
 
-### A Star Pathfinding
+The README and additional documentation were drafted with assistance from a language model to collate implementation details and produce usage examples. The AI was used only for writing and organizing documentation (not for algorithm implementation). All code in the repository was written by the project authors.
 
-This algorithm traverses the maze by gradually exploring the squares accessible from a given point, avoiding revisiting those already processed.
-As soon as it reaches the starting square, it reconstructs and returns the most optimized reverse path to follow. *(by rpetit)*
+## Technical notes (implementation highlights)
 
-### Animation display
+- The configuration system is implemented in `src/mazegen/config.py`. It registers expected keys and performs type-safe parsing with helpful errors (missing key, bad type, file not found).
+- `MazeGenerator` (in `src/mazegen/maze_generator.py`) implements:
+  - grid initialization and cell management
+  - algorithm selection (via `AlgoSelector`) and registration of Backtrack and Prim
+  - logo import and placement; logo file is a plain text file: spaces or the character `0` are treated as background; any other non-newline character is treated as a logo pixel. The logo is centered and protected from carving.
+  - A* pathfinding (used to compute the path from exit back to entry for display and export)
+  - Export / import format used to save and restore mazes (see below)
 
-Each change in the maze generation and pathfinding path is saved in a list, which is then read in order to display the animation as it was generated. *(by rpetit)*
+Exported maze format (text file):
 
-### Reusable parts
+- A sequence of lines representing the maze walls; each character encodes the four walls of a cell (hex or digit is accepted by the parser).
+- After the grid lines there are three extra lines:
+  1. `sx,sy` — the start coordinates
+  2. `ex,ey` — the exit coordinates
+  3. (optional) direction string composed of `N`, `E`, `S`, `W` characters representing the solved path directions
 
-The generation algorithms are in classes that are reusable, the display and parsing are also independent.
+`MazeGenerator.export()` produces this format and `MazeGenerator.import_maze()` reads it back and reconstructs the internal grid and path.
 
-# Team and project management
+Display & UI:
 
-### Repartitions
-- **mthetcha**: Algorithmic part
-- **rpetit**: Visual and parsing part
+- `MazeDisplay` (in `src/mazegen/display/maze_display.py`) provides the MLX-based UI: a main window, side panel with controls, color picker, algorithm selector, start/stop buttons and animation.
+- `MazeApp` (in `src/mazegen/maze.py`) is a small wrapper used by `a_maze_ing.py` that wires `Config`, `MazeGenerator` and `MazeDisplay` together and starts the UI loop.
 
-This distribution was decided at the start and remained in place throughout the project.
-# Advanced features
+## Reusability & API (how to use as a module)
 
-### Color pick
-It is possible to choose the color of the 42 logo using a color picker. *(by rpetit)*
+The package is importable (it is a normal Python package under `src/mazegen`). You can use it as a library or run the UI app.
 
-### Algorithms Switch
+Examples:
 
-It is possible to choose which algorithm to use thanks to a switch button. *(by rpetit)*
+- Run from the command line (entrypoint already provided):
+
+```py
+# run the app and UI (reads config.txt by default)
+from mazegen import MazeApp
+
+MazeApp('config.txt')
+```
+
+- Programmatic usage (generate a maze and save/export without UI):
+
+```py
+from mazegen.config import Config
+from mazegen.maze_generator import MazeGenerator
+
+cfg = Config('config.txt')
+mg = MazeGenerator(cfg)
+mg.generate()                 # generate, solve and write output_file
+text = mg.export()            # get exported string representation
+print(text)
+```
+
+- Import a saved maze and compute its path:
+
+```py
+from mazegen.config import Config
+from mazegen.maze_generator import MazeGenerator
+
+cfg = Config('config.txt')
+mg = MazeGenerator(cfg)
+with open('maze.txt') as f:
+    mg.import_maze(f.read())
+# mg.path now contains the solved path as a list of (x,y,direction)
+```
+
+Primary public classes and responsibilities:
+- `Config` — parse configuration files and provide typed accessors
+- `MazeGenerator` — main generator, exporter/importer, A* solving and logo placement
+- `MazeDisplay` — MLX UI and rendering
+- `MazeApp` — small entrypoint that wires everything together
+
+If you plan to embed only generation logic in another project, import `Config` and `MazeGenerator` and avoid MLX/display imports.
+
+Edge cases to be aware of:
+- Logo too large for the maze will raise an exception; make sure logo dimensions < maze minus borders (code checks and raises `ValueError`).
+- Entry/exit coordinates must be within [0..width-1] x [0..height-1].
+- Cell size computed by the display can be zero on very large mazes or small screens and will raise `DisplayMazeToBig`.
+
+## Team, planning and project management
+
+- Team:
+  - mthetcha — algorithm implementations and core generation logic
+  - rpetit — display, parsing, UI wiring and project orchestration, testing
+
+- Planning & evolution:
+  - Initial plan: implement one generation algorithm and a way to preserve the 42 logo.
+  - Evolution: added a second algorithm (Prim), imperfect-maze post-processing (loop creation), animation, color picker and UI controls.
+
+- What worked well:
+  - Clear separation between parsing, generation and display allowed parallel work.
+  - Using small test inputs in `tests/` made it easier to validate error cases (logo too big, invalid params).
+
+- What could be improved:
+  - Add CI (GitHub Actions) to run linting and tests automatically.
+  - Add unit tests for the algorithm behaviors (edge cases for undo_perfect, logo placement, seed determinism).
+  - Provide a headless mode that generates many mazes in batch without MLX dependencies for automated benchmarking.
+
+Tools used:
+
+- Python 3.10+, `venv`, `make`
+- `mlx-2.2-py3-none-any.whl` (MiniLibX Python bindings) for display
+- `pytest`, `flake8`, `mypy` for tests and linting
+
+## How to extend / contribute
+
+- Add new algorithms by implementing the `Algo` interface (see `src/mazegen/algorithms/algo.py`) and registering it in `MazeGenerator` via `AlgoSelector`.
+- For headless or batch usage, call `MazeGenerator.generate()` and avoid creating a `MazeDisplay`.
+
+## Final notes
+
+This repository contains both a small reusable maze generation package and a fully interactive visualization. If you'd like, I can also add:
+
+- a short example script that generates mazes headlessly and saves them in a directory,
+- a minimal test-suite that verifies deterministic output for a given seed,
+- or CI configuration to run linters and tests automatically.
+
+If you want any of those, tell me which and I'll add them.

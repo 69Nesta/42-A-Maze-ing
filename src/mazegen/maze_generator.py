@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Generator, Optional
 from .direction import Direction
 from .cell import Cell
 from .config import Config, EConfig
@@ -13,19 +13,42 @@ from random import seed
 
 
 class MazeGenerator:
-    def __init__(self, config: Config):
+    def __init__(
+        self,
+        config: Config,
+        logo_file: Optional[str] = None,
+        seed_override: Optional[int] = None,
+        algo_override: Optional[EAlgo] = None,
+        output_file_override: Optional[str] = None,
+    ):
+        """Create a MazeGenerator.
+
+        Optional overrides allow caller code (CLI or tests) to change the
+        logo file, RNG seed, selected algorithm or output file without
+        editing the config file.
+        """
+
         self.config: Config = config
         self.width: int = self.config.get_int(EConfig.WIDTH).get_value()
         self.height: int = self.config.get_int(EConfig.HEIGHT).get_value()
         self.start: t_point = self.config.get_coords(EConfig.ENTRY).get_value()
         self.end: t_point = self.config.get_coords(EConfig.EXIT).get_value()
-        self.seed: int = self.config.get_int(EConfig.MAZE_SEED).get_value()
-        self.output_file: str = self.config.get_str(
-            EConfig.OUTPUT_FILE
-        ).get_value()
-        self.logo_file: str = self.config.get_str(
-            EConfig.LOGO_FILE
-        ).get_value()
+        if seed_override is not None:
+            self.seed = seed_override
+        else:
+            self.seed = self.config.get_int(EConfig.MAZE_SEED).get_value()
+        if output_file_override is not None:
+            self.output_file = output_file_override
+        else:
+            self.output_file = self.config.get_str(
+                EConfig.OUTPUT_FILE
+            ).get_value()
+        if logo_file is not None:
+            self.logo_file = logo_file
+        else:
+            self.logo_file = self.config.get_str(
+                EConfig.LOGO_FILE
+            ).get_value()
         self.logo: list[list[int]] = self.import_logo(self.logo_file)
 
         if self.width <= 0 or self.height <= 0:
@@ -57,6 +80,8 @@ class MazeGenerator:
             Backtrack(self.width, self.height, self.end),
             True
         )
+        if algo_override is not None:
+            self.algo.set_current_algo(algo_override)
 
     def update_seed(self, seed_value: int) -> None:
         if (seed_value != 0):
