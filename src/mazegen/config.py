@@ -53,7 +53,7 @@ class ConfigValue(Generic[T]):
 
     def __init__(
         self,
-        key: "EConfig",
+        key: EConfig,
         value_type: Type[Any] | tuple[Type[Any], ...],
         default: T | None = None,
         required: bool = True,
