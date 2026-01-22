@@ -116,26 +116,67 @@ class MazeGenerator:
             self.algo.set_current_algo(algo_override)
 
     def update_seed(self, seed_value: int) -> None:
+        """Set the random seed when a non-zero seed is provided.
+
+        Args:
+            seed_value (int): Seed value to initialize RNG. If zero,
+                the RNG is not seeded to preserve non-determinism.
+
+        Returns:
+            None
+        """
         if (seed_value != 0):
             seed(seed_value)
 
     def init_grid(self) -> None:
+        """Initialize the internal grid.
+
+        Returns:
+            None
+        """
         self.grid = [
             [Cell(x, y) for x in range(self.width)] for y in range(self.height)
         ]
 
     def init_path(self) -> None:
+        """Reset the stored path to an empty list.
+
+        Returns:
+            None
+        """
         self.path = []
 
     def init_generate_order(self) -> None:
+        """Reset the generation order list used by generation algorithms.
+
+        Returns:
+            None
+        """
         self.generate_order = []
 
     def get_cell(self, x: int, y: int) -> Cell:
+        """Return the Cell from specified coordinates.
+
+        Args:
+            x (int): X coordinate (column) of the cell.
+            y (int): Y coordinate (row) of the cell.
+
+        Returns:
+            Cell: The cell located at (x, y).
+
+        Raises:
+            IndexError: If the provided coordinates are out of bounds.
+        """
         if x < 0 or x >= self.width or y < 0 or y >= self.height:
             raise IndexError("Cell coordinates out of bounds")
         return self.grid[y][x]
 
     def export(self) -> str:
+        """Serialize the current maze to a string representation.
+
+        Returns:
+            str: The serialized maze data including a trailing newline.
+        """
         grid = []
         for row in self.grid:
             line = ''
@@ -167,6 +208,14 @@ class MazeGenerator:
         return '\n'.join(grid) + '\n'
 
     def import_maze(self, data: str) -> None:
+        """Load maze state from a serialized string.
+
+        Args:
+            data (str): Serialized maze data produced by export().
+
+        Returns:
+            None
+        """
         self.init_grid()
         lines: list[str] = data.strip().splitlines()
         wall_data: list[str] = lines[:-3]
@@ -196,6 +245,17 @@ class MazeGenerator:
 
     @staticmethod
     def import_logo(file: str) -> list[list[int]]:
+        """Load a logo from a text file.
+
+        Each character in the file is mapped to 0 or 1 where spaces or
+        '0' become 0 and any other printable character becomes 1.
+
+        Args:
+            file (str): Path to the logo text file.
+
+        Returns:
+            list[list[int]]: A list of lists representing the logo .
+        """
         logo: list[list[int]] = []
         with open(file, 'r') as all:
             for row in all:
@@ -213,6 +273,14 @@ class MazeGenerator:
     def pathfinding_next_step(
                 self
                 ) -> Generator[tuple[int, int, Direction], None, None]:
+        """Yield successive steps from the current computed path.
+
+        Yields tuples of (x, y, Direction) representing the next cell and
+        the direction to move to reach the subsequent path cell.
+
+        Yields:
+            tuple[int, int, Direction]: Next step in the path.
+        """
         if not self.start or not self.end or not self.path:
             return
         # x, y = self.start
@@ -231,11 +299,31 @@ class MazeGenerator:
                     yield (x, y, None)
 
     def get_path_to_index(self, step: int) -> t_path:
+        """Return the subpath from the start up to the specified step index.
+
+        Args:
+            step (int): Index of the step to slice the path at.
+
+        Returns:
+            t_path: A slice of the stored path up to the provided step.
+
+        Raises:
+            IndexError: If the requested step is out of bounds.
+        """
         if step < 0 or step >= len(self.path):
             raise IndexError("Path step out of bounds")
         return self.path[:step]
 
     def generate(self) -> None:
+        """Generate a new maze using the configured algorithm.
+
+        Initializes the grid, applies the selected generation
+        algorithm, add the logo, performs optional post-processing,
+        solves the maze for a path and saves the output to a file.
+
+        Returns:
+            None
+        """
         sx, sy = self.start
         ex, ey = self.end
 
@@ -262,6 +350,15 @@ class MazeGenerator:
             print(f"Error saving maze to file: {e}")
 
     def display_logo(self) -> None:
+        """Add the logo into the current grid.
+
+        The logo is centered in the maze and marks cells as logo or
+        logo_blank. It raises ValueError if the logo does not fit or
+        overlaps the start/exit points.
+
+        Returns:
+            None
+        """
         self.center_x = (self.width - len(self.logo[0])) // 2
         self.center_y = (self.height - len(self.logo)) // 2
         for i in range(len(self.logo)):
@@ -280,6 +377,12 @@ class MazeGenerator:
                     self.grid[y][x].logo_blank = True
 
     def check_logo(self) -> None:
+        """Validate that the logo does not create inaccessible
+        areas in the maze.
+
+        Returns:
+            None
+        """
         for i in range(len(self.logo)):
             for j in range(len(self.logo[i])):
                 x = int(self.center_x) + j
@@ -290,9 +393,29 @@ class MazeGenerator:
                                           'be no inaccessible areas'))
 
     def solve(self, x: int, y: int) -> None:
+        """Compute and store a path from the maze entry to (x, y).
+
+        Args:
+            x (int): Destination x coordinate.
+            y (int): Destination y coordinate.
+
+        Returns:
+            None
+        """
         self.path = self.a_star_find(x, y)
 
     def a_star_find(self, x: int, y: int) -> t_path:
+        """Find a path from (x, y) back to the maze start.
+
+        Args:
+            x (int): X coordinate of the starting search cell.
+            y (int): Y coordinate of the starting search cell.
+
+        Returns:
+            t_path: A list of (x, y, Direction) tuples describing the
+                path from the entry to the provided (x, y).
+                it returns an empty list if no path is found.
+        """
         queue: list[tuple[int, int, t_path]] = []
         visited: set[tuple[int, int]] = set()
 
@@ -331,6 +454,15 @@ class MazeGenerator:
         return []
 
     def undo_perfect(self, grid: t_grid) -> None:
+        """Break some perfect-maze properties by removing selected
+        walls to create additional loops.
+
+        Args:
+            grid (t_grid): The grid to operate on.
+
+        Returns:
+            None
+        """
         available: list[Cell] = []
 
         for row in self.grid:

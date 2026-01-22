@@ -5,7 +5,22 @@ from .maze_generator import MazeGenerator
 
 
 class MazeApp:
+    """initialize and run the maze renderer.
+
+    Args:
+        config_file (str): Path to the configuration file containing
+            maze and renderer settings.
+    """
+
     def __init__(self, config_file: str):
+        """Initialize the application and start the renderer.
+
+        Args:
+            config_file (str): Path to the configuration file.
+
+        Returns:
+            None
+        """
         try:
             self.config = Config(config_file)
             self.maze = MazeGenerator(self.config)
