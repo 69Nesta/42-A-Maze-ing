@@ -5,10 +5,39 @@ from random import randint
 
 
 class Prim(Algo):
+    """Prim's randomized maze generation algorithm.
+
+    Args:
+        width (int): Width of the maze.
+        height (int): Height of the maze.
+        end (t_point): Exit coordinates.
+    """
+
     def __init__(self, width: int, height: int, end: t_point) -> None:
+        """Initialize the Prim algorithm instance.
+
+        Args:
+            width (int): Maze width.
+            height (int): Maze height.
+            end (t_point): Exit coordinates.
+        Returns:
+            None
+        """
         super().__init__(width, height, end)
 
     def create(self, grid: t_grid, x: int, y: int) -> list[Coords]:
+        """Generate the entire perfect maze by using the Prim
+        algorithm
+
+        Args:
+            grid (t_grid): 2D grid of Cell objects to operate on.
+            x (int): Starting x coordinate.
+            y (int): Starting y coordinate.
+
+        Returns:
+            list[Coords]: Ordered list of coordinates visited or added
+                to the frontier during generation.
+        """
         generate_order: list[Coords] = []
         next = [grid[y][x]]
         grid[y][x].is_next = True
