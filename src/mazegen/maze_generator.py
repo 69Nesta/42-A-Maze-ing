@@ -16,6 +16,10 @@ class MazeGenerator:
     def __init__(
         self,
         config: Config,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        entry: Optional[t_point] = None,
+        exit: Optional[t_point] = None,
         logo_file: Optional[str] = None,
         seed_override: Optional[int] = None,
         algo_override: Optional[EAlgo] = None,
@@ -29,26 +33,54 @@ class MazeGenerator:
         """
 
         self.config: Config = config
-        self.width: int = self.config.get_int(EConfig.WIDTH).get_value()
-        self.height: int = self.config.get_int(EConfig.HEIGHT).get_value()
-        self.start: t_point = self.config.get_coords(EConfig.ENTRY).get_value()
-        self.end: t_point = self.config.get_coords(EConfig.EXIT).get_value()
+        self.width: int
+        self.height: int
+        self.start: t_point
+        self.end: t_point
+        self.seed: int
+        self.output_file: str
+        self.logo_file: str
+        self.center_x: int = 0
+        self.center_y: int = 0
+
+        if width is not None:
+            self.width = width
+        else:
+            self.width = self.config.get_int(EConfig.WIDTH).get_value()
+
+        if height is not None:
+            self.height = height
+        else:
+            self.height = self.config.get_int(EConfig.HEIGHT).get_value()
+
+        if entry is not None:
+            self.start = entry
+        else:
+            self.start = self.config.get_coords(EConfig.ENTRY).get_value()
+        if exit is not None:
+            self.end = exit
+        else:
+            self.end = self.config.get_coords(EConfig.EXIT).get_value()
+
         if seed_override is not None:
             self.seed = seed_override
         else:
             self.seed = self.config.get_int(EConfig.MAZE_SEED).get_value()
+
         if output_file_override is not None:
             self.output_file = output_file_override
         else:
             self.output_file = self.config.get_str(
                 EConfig.OUTPUT_FILE
             ).get_value()
+
         if logo_file is not None:
             self.logo_file = logo_file
         else:
             self.logo_file = self.config.get_str(
                 EConfig.LOGO_FILE
             ).get_value()
+
         self.logo: list[list[int]] = self.import_logo(self.logo_file)
 
         if self.width <= 0 or self.height <= 0:
