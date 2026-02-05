@@ -137,6 +137,70 @@ The application and library expose the following features (UI elements and progr
 - FPS counter: optionally show a live FPS counter (controlled by the config `SHOW_FPS`).
 - Mouse-driven UI: click side-panel buttons, selectors and the color selector to control the app (the Escape key closes the window).
 
+## Video demos
+
+Short demonstrations of the main features (videos are in the assets folder). If your viewer does not support embeds, the links are kept below each preview.
+
+### Backtracking algorithm
+“Organic” generation with long corridors and a preserved logo.
+
+<div align="center">
+	<video controls width="720">
+		<source src="assets/algotithm_backtrack.mp4" type="video/mp4" />
+		Your browser does not support HTML5 video.
+	</video>
+	<br />
+	<a href="assets/algotithm_backtrack.mp4">assets/algotithm_backtrack.mp4</a>
+</div>
+
+### Prim algorithm
+Different texture, more branches, and shorter corridors.
+
+<div align="center">
+	<video controls width="720">
+		<source src="assets/algotithm_prim.mp4" type="video/mp4" />
+		Your browser does not support HTML5 video.
+	</video>
+	<br />
+	<a href="assets/algotithm_prim.mp4">assets/algotithm_prim.mp4</a>
+</div>
+
+### Algorithm selector
+Switch algorithms on the fly via the UI.
+
+<div align="center">
+	<video controls width="720">
+		<source src="assets/algotithm_selector.mp4" type="video/mp4" />
+		Your browser does not support HTML5 video.
+	</video>
+	<br />
+	<a href="assets/algotithm_selector.mp4">assets/algotithm_selector.mp4</a>
+</div>
+
+### Color themes
+Cycle through palettes and logo rendering.
+
+<div align="center">
+	<video controls width="720">
+		<source src="assets/color_theme.mp4" type="video/mp4" />
+		Your browser does not support HTML5 video.
+	</video>
+	<br />
+	<a href="assets/color_theme.mp4">assets/color_theme.mp4</a>
+</div>
+
+### Pathfinding
+Show/hide the solution path.
+
+<div align="center">
+	<video controls width="720">
+		<source src="assets/path_finding.mp4" type="video/mp4" />
+		Your browser does not support HTML5 video.
+	</video>
+	<br />
+	<a href="assets/path_finding.mp4">assets/path_finding.mp4</a>
+</div>
+
 Resources and reading:
 
 - MLX (MiniLibX) doc: https://harm-smits.github.io/42docs/libs/minilibx
@@ -218,6 +282,12 @@ Primary public classes and responsibilities:
 - `MazeGenerator` — main generator, exporter/importer, A* solving and logo placement
 - `MazeDisplay` — MLX UI and rendering
 - `MazeApp` — small entrypoint that wires everything together
+
+### Short descriptions
+
+- **Generation flow**: `MazeGenerator.generate()` builds the grid, preserves the centered logo region, carves passages with the selected algorithm, optionally introduces loops, then computes the solution path.
+- **Display loop**: `MazeDisplay` renders the maze, logo, and optional path overlay; it also drives animation timing and handles UI inputs (buttons, palette, selectors).
+- **Export format**: `MazeGenerator.export()` serializes the maze and path to a compact text format that can be reloaded with `import_maze()`.
 
 If you plan to embed only generation logic in another project, import `Config` and `MazeGenerator` and avoid MLX/display imports.
 
