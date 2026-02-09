@@ -11,7 +11,7 @@ FLAKE			= $(VENV_BIN)/flake8
 MYPY			= $(VENV_BIN)/mypy
 EXCLUDE			= $(VENV)
 DIST_DIR		= .
-OUTPUT_FILE		= $(DIST_DIR)/mazegen-1.0.0-py3-none-any.whl
+OUTPUT_FILE		= mazegen-1.0.0-py3-none-any.whl
 MAIN			= a_maze_ing.py
 SRCS_DIR		= ./src/mazegen
 SRCS 			= \
@@ -38,6 +38,11 @@ SRCS 			= \
 	$(SRCS_DIR)/display/text_manager.py
 
 
+install: $(VENV)
+	$(V_PIP) install $(DEPENDENCIES)
+	$(MAKE) build
+	$(V_PIP) install $(OUTPUT_FILE) --force-reinstall
+
 build: $(OUTPUT_FILE)
 
 $(OUTPUT_FILE): $(SRCS)
@@ -46,11 +51,6 @@ $(OUTPUT_FILE): $(SRCS)
 $(VENV):
 	$(PYTHON) -m venv $(VENV)
 	$(V_PIP) install --upgrade pip
-
-install: $(VENV)
-	$(V_PIP) install $(DEPENDENCIES)
-	$(MAKE) build
-	$(V_PIP) install $(OUTPUT_FILE) --force-reinstall
 
 run: install
 	$(V_PYTHON) $(MAIN) config.txt
