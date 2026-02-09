@@ -1,6 +1,6 @@
 PYTHON			= python3
 VENV			= .venv
-VENV_BIN			= $(VENV)/bin
+VENV_BIN		= $(VENV)/bin
 V_PYTHON		= $(VENV_BIN)/python3
 V_PIP			= $(VENV_BIN)/python3 -m pip
 
@@ -10,7 +10,7 @@ DEPENDENCIES	= build pytest flake8 mypy lib/mlx-2.2-py3-none-any.whl
 FLAKE			= $(VENV_BIN)/flake8
 MYPY			= $(VENV_BIN)/mypy
 EXCLUDE			= $(VENV)
-DIST_DIR		= dist
+DIST_DIR		= .
 OUTPUT_FILE		= $(DIST_DIR)/mazegen-1.0.0-py3-none-any.whl
 MAIN			= a_maze_ing.py
 SRCS_DIR		= ./src/mazegen
