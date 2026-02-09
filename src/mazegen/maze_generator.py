@@ -21,6 +21,7 @@ class MazeGenerator:
         entry: Optional[t_point] = None,
         exit: Optional[t_point] = None,
         logo_file: Optional[str] = None,
+        perfect: Optional[bool] = True,
         seed_override: Optional[int] = None,
         algo_override: Optional[EAlgo] = None,
         output_file_override: Optional[str] = None,
@@ -80,6 +81,11 @@ class MazeGenerator:
             self.logo_file = self.config.get_str(
                 EConfig.LOGO_FILE
             ).get_value()
+
+        if perfect is not None:
+            self.perfect = perfect
+        else:
+            self.perfect = self.config.get_bool(EConfig.PERFECT).get_value()
 
         self.logo: list[list[int]] = self.import_logo(self.logo_file)
 
@@ -250,7 +256,8 @@ class MazeGenerator:
         if algo is None:
             raise ValueError("No algorithm selected for maze generation")
         self.generate_order += algo.create(self.grid, sx, sy)
-        self.undo_perfect(self.grid)
+        if not self.perfect:
+            self.undo_perfect(self.grid)
         self.check_logo()
         self.generate_order_size = len(self.generate_order)
         self.solve(ex, ey)
