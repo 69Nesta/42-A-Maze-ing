@@ -367,14 +367,15 @@ class MazeGenerator:
         Returns:
             None
         """
-        self.center_x = (self.width - len(self.logo[0])) // 2
+        logo_width = max([len(line) for line in self.logo])
+        self.center_x = (self.width - logo_width) // 2
         self.center_y = (self.height - len(self.logo)) // 2
         for i in range(len(self.logo)):
             for j in range(len(self.logo[i])):
                 x = int(self.center_x) + j
                 y = int(self.center_y) + i
                 if (x <= 1) or (y <= 1) or (x >= self.width - 2):
-                    raise (ValueError("The logo is to big"))
+                    raise (ValueError("The logo is too big"))
                 if self.logo[i][j] == 1:
                     if self.end == (x, y) or self.start == (x, y):
                         raise (ValueError('The logo can t be on the ' +
