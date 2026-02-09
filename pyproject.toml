@@ -25,3 +25,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mazegen"]
+
+[tool.mypy-mlx]
+ignore_missing_imports = false
+

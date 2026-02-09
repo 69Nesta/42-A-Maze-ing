@@ -1,6 +1,8 @@
 # Projett-specific ignores
 maze.txt
 mlx_CLXV
+mazegen-1.0.0-py3-none-any.whl
+mazegen-1.0.0.tar.gz
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -46,6 +48,7 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+.vscode
 nosetests.xml
 coverage.xml
 *.cover
