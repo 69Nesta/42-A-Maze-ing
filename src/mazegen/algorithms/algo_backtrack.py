@@ -6,10 +6,39 @@ from random import shuffle
 
 
 class Backtrack(Algo):
+    """Depth-first backtracking maze generation algorithm.
+
+    Args:
+        width (int): Width of the maze.
+        height (int): Height of the maze.
+        end (t_point): Exit coordinates.
+    """
+
     def __init__(self, width: int, height: int, end: t_point):
+        """Initialize the Backtrack algorithm instance.
+
+        Args:
+            width (int): Maze width.
+            height (int): Maze height.
+            end (t_point): Exit coordinates.
+        Returns:
+            None
+        """
         super().__init__(width, height, end)
 
     def create(self, grid: t_grid, x: int, y: int) -> list[Coords]:
+        """Generate the entire perfect maze by using a stack to
+        do the backtrack.
+
+        Args:
+            grid (t_grid): 2D grid of Cell objects to operate on.
+            x (int): Starting x coordinate.
+            y (int): Starting y coordinate.
+
+        Returns:
+            list[Coords]: Ordered list of coordinates visited during
+                generation.
+        """
         generate_order: list[Coords] = []
         stack = [(x, y)]
         generate_order.append(Coords(x, y))
