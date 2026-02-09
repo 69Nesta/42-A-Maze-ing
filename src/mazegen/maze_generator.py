@@ -38,7 +38,7 @@ class MazeGenerator:
         self.height: int
         self.start: t_point
         self.end: t_point
-        self.seed: int
+        self.seed: str
         self.output_file: str
         self.logo_file: str
         self.perfect: bool
@@ -67,7 +67,7 @@ class MazeGenerator:
         if seed_override is not None:
             self.seed = seed_override
         else:
-            self.seed = self.config.get_int(EConfig.MAZE_SEED).get_value()
+            self.seed = self.config.get_str(EConfig.MAZE_SEED).get_value()
 
         if output_file_override is not None:
             self.output_file = output_file_override
@@ -132,7 +132,7 @@ class MazeGenerator:
         Returns:
             None
         """
-        if (seed_value != 0):
+        if (seed_value != '0'):
             seed(seed_value)
 
     def init_grid(self) -> None:
