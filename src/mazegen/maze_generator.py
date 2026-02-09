@@ -87,7 +87,6 @@ class MazeGenerator:
             self.perfect = perfect
         else:
             self.perfect = self.config.get_bool(EConfig.PERFECT).get_value()
-        print(self.perfect)
 
         self.logo: list[list[int]] = self.import_logo(self.logo_file)
 
@@ -347,7 +346,6 @@ class MazeGenerator:
             raise ValueError("No algorithm selected for maze generation")
         self.generate_order += algo.create(self.grid, sx, sy)
         if not self.perfect:
-            print("NOOOO")
             self.undo_perfect(self.grid)
         self.check_logo()
         self.generate_order_size = len(self.generate_order)
