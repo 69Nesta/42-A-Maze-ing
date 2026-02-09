@@ -41,7 +41,7 @@ SRCS 			= \
 build: $(OUTPUT_FILE)
 
 $(OUTPUT_FILE): $(SRCS)
-	$(V_PYTHON) -m build -o .
+	$(V_PYTHON) -m build -o $(DIST_DIR)
 
 $(VENV):
 	$(PYTHON) -m venv $(VENV)
