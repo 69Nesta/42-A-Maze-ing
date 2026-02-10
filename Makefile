@@ -71,8 +71,8 @@ fclean: clean
 	rm -rf $(VENV)
 
 lint:
-	$(FLAKE) src
-	$(MYPY) src $(MYPY_FLAGS)
+	$(FLAKE) src tests
+	$(MYPY) src tests $(MYPY_FLAGS)
 
 lint-strict:
 	$(FLAKE) src
