@@ -22,7 +22,7 @@ class MazeGenerator:
         exit: Optional[t_point] = None,
         logo_file: Optional[str] = None,
         perfect: Optional[bool] = None,
-        seed_override: Optional[int] = None,
+        seed_override: Optional[str] = None,
         algo_override: Optional[EAlgo] = None,
         output_file_override: Optional[str] = None,
     ):
@@ -122,7 +122,7 @@ class MazeGenerator:
         if algo_override is not None:
             self.algo.set_current_algo(algo_override)
 
-    def update_seed(self, seed_value: int) -> None:
+    def update_seed(self, seed_value: str) -> None:
         """Set the random seed when a non-zero seed is provided.
 
         Args:

@@ -341,7 +341,7 @@ class Config:
         parser.register(ConfigValue[str](EConfig.LOGO_FILE, str))
         parser.register(ConfigValue[bool](EConfig.DEBUG, bool, False, False))
         parser.register(ConfigValue[str](
-            EConfig.MAZE_SEED, str, 0, False
+            EConfig.MAZE_SEED, str, "0", False
         ))
         parser.register(ConfigValue[bool](
             EConfig.ANIMATE_MAZE_GENERATION, bool
